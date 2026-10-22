@@ -99,7 +99,7 @@
   }
   var ziel = hauptfenster() || window;
   // Mindestfassung des Overlay-Codes; eine ältere im Hauptfenster wird durch Nachladen ersetzt.
-  var OVERLAY_VERSION = 9;
+  var OVERLAY_VERSION = 10;
   var warten = [], laedt = false;
   function overlay(cb) {
     var a = ziel.__symconNotify;
@@ -138,7 +138,7 @@
   }
   function nutzlast(m, sofort) {
     return JSON.stringify({ owner: OWNER, msg: m, theme: thema(), labels: L, icon: iconSvg(iconName(m)), force: !!sofort,
-      hook: state.config.hookBase || '' });
+      hook: state.config.hookBase || '', inline: ziel === window });
   }
   // Icons der Bedienelemente im Overlay (das Hauptfenster hat kein Font Awesome): einmal je Kachel liefern.
   var werkzeugGeliefert = false;

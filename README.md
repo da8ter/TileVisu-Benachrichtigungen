@@ -103,7 +103,7 @@ Das Lesen der Glocke nutzt Funktionen der Notification Control (`NC_GetNotificat
 
 - **Standard:** Das Overlay erscheint, solange die Seite mit der Kachel offen ist. Beim Wechsel auf eine andere Seite schließt es sich.
 - **Auf jeder Seite** (Schalter im Formular): Die Kachel hinterlegt beim ersten Laden einen kleinen Empfänger in der Browser-Visualisierung. Er fragt alle paar Sekunden nach neuen Nachrichten und zeigt sie auf jeder Seite. Dafür muss die Kachel in dieser Sitzung einmal geladen gewesen sein, am besten liegt sie auf der Startseite.
-- **Symcon-App:** Die App gibt Kacheln keinen Zugriff auf die übrige Visualisierung. Dort erscheint das Overlay innerhalb der Kachel.
+- **Symcon-App:** Die App gibt Kacheln keinen Zugriff auf die übrige Visualisierung. Dort erscheint das Overlay innerhalb der Kachel, hält Kachelname und Ränder frei und verkleinert Icons, Schrift und Knöpfe passend zur Kachelgröße. Das gilt auch für kleine Browserfenster und Handys.
 - Jede Nachricht erscheint in jedem Browser nur einmal als Overlay. Nach dem Neuladen springen nur Nachrichten der letzten zwei Minuten auf.
 
 Das Overlay nutzt den Zugriff einer Kachel auf das Fenster der Visualisierung. Das ist keine zugesicherte Schnittstelle von Symcon. Ändert Symcon das, zeigt die Kachel das Overlay in sich selbst.
