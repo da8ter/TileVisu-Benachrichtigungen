@@ -50,7 +50,10 @@
             "Invalid duration": "Ungültige Dauer",
             "Invalid size": "Ungültige Größe",
             "Image media not found": "Bild-Medienobjekt nicht gefunden",
-            "Notification store is busy": "Der Nachrichtenspeicher ist belegt"
+            "Notification store is busy": "Der Nachrichtenspeicher ist belegt",
+            "%1 unread": "%1 ungelesen",
+            "%1 messages": "%1 Nachrichten",
+            "1 message": "1 Nachricht"
         }
     }
 }

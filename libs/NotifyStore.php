@@ -191,8 +191,10 @@ final class NotifyStore
     public static function HtmlDocument(string $html, string $msgId, string $color): string
     {
         $color = preg_match('/^[0-9a-fA-F]{6}$/', $color) === 1 ? '#' . $color : 'inherit';
+        // Gemessen wird der Inhalt (Unterkante von body samt Rand), nicht scrollHeight des Dokuments:
+        // das ist nie kleiner als der Rahmen selbst, der Rahmen könnte also nie schrumpfen.
         $reporter = '<script>(function(){var l=-1;function s(){var d=document.documentElement,b=document.body;'
-            . 'var h=Math.ceil(Math.max(d.scrollHeight,b?b.scrollHeight:0));if(h!==l){l=h;'
+            . 'var h=b?Math.ceil(b.getBoundingClientRect().bottom+(parseFloat(getComputedStyle(b).marginBottom)||0)+(window.scrollY||0)):d.scrollHeight;if(h!==l){l=h;'
             . 'parent.postMessage({ntfHeight:h,ntfId:' . json_encode($msgId) . '},"*");}}'
             . 'addEventListener("load",s);if(window.ResizeObserver){new ResizeObserver(s).observe(document.documentElement);}s();})();</script>';
         if (stripos($html, '<html') !== false) {
@@ -201,7 +203,7 @@ final class NotifyStore
         }
         return '<!doctype html><html><head><meta charset="utf-8">'
             . '<meta name="viewport" content="width=device-width,initial-scale=1">'
-            . '<style>html,body{margin:0;background:transparent}body{font:15px/1.45 system-ui,-apple-system,sans-serif;color:'
+            . '<style>html,body{margin:0;background:transparent}body{display:flow-root;font:15px/1.45 system-ui,-apple-system,sans-serif;color:'
             . $color . '}img,video{max-width:100%;height:auto}</style></head><body>' . $html . $reporter . '</body></html>';
     }
 

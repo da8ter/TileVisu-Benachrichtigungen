@@ -208,7 +208,9 @@
 
   function zeichnen() {
     listEl.textContent = '';
-    countEl.textContent = state.messages.length ? String(state.unread) + ' / ' + String(state.messages.length) : '';
+    var n = state.messages.length;
+    countEl.textContent = !n ? '' : state.unread > 0 ? L.unread.replace('%1', String(state.unread))
+      : n === 1 ? L.one : L.total.replace('%1', String(n));
     clearBtn.style.visibility = state.messages.length ? '' : 'hidden';
     if (!state.messages.length) {
       var e = document.createElement('div');

@@ -55,7 +55,7 @@
     '.ntf-body{flex:1 1 auto;min-height:0;overflow:auto;padding:4px 20px 12px;display:flex;flex-direction:column;gap:12px}',
     '.ntf-text{white-space:pre-wrap;overflow-wrap:anywhere}',
     '.ntf-img{display:block;max-width:100%;max-height:55vh;object-fit:contain;border-radius:12px;align-self:center}',
-    '.ntf-frame{display:block;width:100%;border:0;min-height:40px;height:120px;background:transparent}',
+    '.ntf-frame{display:block;width:100%;border:0;min-height:24px;height:60px;background:transparent}',
     '.ntf-card.ntf-fixed .ntf-frame{flex:1 1 auto;height:auto;min-height:120px}',
     '.ntf-foot{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:8px 18px 16px}',
     '.ntf-more{flex:1;opacity:.6;font-size:13px}',
@@ -237,17 +237,20 @@
     var e = parse(json);
     if (!e || !e.msg || !e.msg.id) return;
     var entry = { owner: e.owner, msg: e.msg, theme: e.theme, labels: e.labels, icon: typeof e.icon === 'string' ? e.icon : '' };
+    var idx = -1;
     for (var i = 0; i < queue.length; i++) {
-      if (queue[i].owner === entry.owner && queue[i].msg.id === entry.msg.id) {
-        queue[i] = entry;
-        if (i === 0) render();
-        return;
-      }
+      if (queue[i].owner === entry.owner && queue[i].msg.id === entry.msg.id) { idx = i; break; }
     }
     if (e.force) {
-      // Aus der Liste geöffnet: sofort vorne.
+      // Aus der Liste geöffnet: sofort vorne, auch wenn sie schon in der Schlange wartet.
+      if (idx >= 0) queue.splice(idx, 1);
       queue.unshift(entry);
       render();
+      return;
+    }
+    if (idx >= 0) {
+      queue[idx] = entry;
+      if (idx === 0) render();
       return;
     }
     queue.push(entry);

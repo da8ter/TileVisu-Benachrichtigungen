@@ -342,7 +342,7 @@ class NotificationTile extends IPSModuleStrict
             'empty' => $t('No messages'), 'clear' => $t('Delete all'), 'close' => $t('Close'),
             'delete' => $t('Delete'), 'more' => $t('+%1 more'), 'now' => $t('just now'),
             'min' => $t('%1 min ago'), 'hour' => $t('%1 h ago'), 'confirmClear' => $t('Delete all messages?'),
-            'next' => $t('Next'),
+            'next' => $t('Next'), 'unread' => $t('%1 unread'), 'total' => $t('%1 messages'), 'one' => $t('1 message'),
         ];
     }
 
