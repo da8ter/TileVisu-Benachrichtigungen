@@ -286,6 +286,60 @@
                     ]
                 }
             ]
+        },
+        {
+            "type": "ExpansionPanel",
+            "caption": "Visualization notifications (bell)",
+            "items": [
+                {
+                    "type": "Label",
+                    "caption": "Mirror: the tile also lists the notifications of a tile visualization (bell icon). Read and delete work both ways."
+                },
+                {
+                    "type": "RowLayout",
+                    "items": [
+                        {
+                            "type": "SelectInstance",
+                            "name": "MirrorVisuID",
+                            "caption": "Mirror notifications of",
+                            "validModules": [
+                                "{B5B875BB-9B76-45FD-4E67-2607E45B3AC4}"
+                            ]
+                        },
+                        {
+                            "type": "CheckBox",
+                            "name": "MirrorOverlay",
+                            "caption": "Show new ones as overlay"
+                        }
+                    ]
+                },
+                {
+                    "type": "Label",
+                    "caption": "Forward: messages of this tile also go to the bell of a visualization and as push to its devices (option push, or always). Symcon allows 250 push messages per day."
+                },
+                {
+                    "type": "RowLayout",
+                    "items": [
+                        {
+                            "type": "SelectInstance",
+                            "name": "ForwardVisuID",
+                            "caption": "Forward to",
+                            "validModules": [
+                                "{B5B875BB-9B76-45FD-4E67-2607E45B3AC4}"
+                            ]
+                        },
+                        {
+                            "type": "CheckBox",
+                            "name": "ForwardDefault",
+                            "caption": "Forward every message (without option push)"
+                        }
+                    ]
+                },
+                {
+                    "type": "Label",
+                    "caption": "Reading uses functions of the Notification Control that are not part of the official documentation."
+                }
+            ]
         }
     ],
     "actions": [
@@ -336,7 +390,7 @@
         },
         {
             "type": "Label",
-            "caption": "Options (JSON, all optional): template (alarm, warning, info, success, doorbell, reminder), icon, image (URL, media ID or data URI), sound (ID of a sound media object), html, level (info, success, warning, alarm), overlay (true/false), duration (seconds, 0 = stays open), size (small, medium, large, full or {\"width\":\"600px\",\"height\":\"70vh\"}), layout (card, banner, hero, toast, photo), color (#rrggbb), textSize (normal, large, xlarge), id (same id replaces the message)."
+            "caption": "Options (JSON, all optional): template (alarm, warning, info, success, doorbell, reminder), icon, image (URL, media ID or data URI), sound (ID of a sound media object), html, level (info, success, warning, alarm), overlay (true/false), duration (seconds, 0 = stays open), size (small, medium, large, full or {\"width\":\"600px\",\"height\":\"70vh\"}), layout (card, banner, hero, toast, photo), color (#rrggbb), textSize (normal, large, xlarge), push (true: also to the bell of the forwarding visualization), id (same id replaces the message)."
         }
     ]
 }

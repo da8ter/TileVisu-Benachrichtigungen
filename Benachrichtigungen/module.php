@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../libs/NotifyStore.php';
+require_once __DIR__ . '/../libs/VisuSync.php';
 
 /**
  * Benachrichtigungs-Kachel: Skripte und Module schicken Nachrichten (NTF_Send), die Kachel zeigt sie
@@ -18,6 +19,10 @@ class NotificationTile extends IPSModuleStrict
 {
     private const HOOK = 'notify';
     private const LEVEL_ICONS = ['info' => 'circle-info', 'success' => 'circle-check', 'warning' => 'triangle-exclamation', 'alarm' => 'siren-on'];
+    /** Kern-Instanz „Notification Control" (verwaltet die Benachrichtigungen der Kachel-Visu). */
+    private const NC_GUID = '{D4B231D6-8141-4B9E-9B32-82DA3AEEAB78}';
+    /** Fallback-Abgleich, falls keine Nachricht der Notification Control kommt. */
+    private const SYNC_MS = 30000;
 
     public function Create(): void
     {
@@ -29,6 +34,15 @@ class NotificationTile extends IPSModuleStrict
         $this->RegisterPropertyInteger('PollInterval', 2);
         $this->RegisterPropertyInteger('MaxMessages', 50);
         $this->RegisterPropertyInteger('MaxAgeDays', 0);
+        // Abgleich mit der Glocke einer Kachel-Visu (Spiegeln) und Weiterleiten als Push.
+        $this->RegisterPropertyInteger('MirrorVisuID', 0);
+        $this->RegisterPropertyBoolean('MirrorOverlay', true);
+        $this->RegisterPropertyInteger('ForwardVisuID', 0);
+        $this->RegisterPropertyBoolean('ForwardDefault', false);
+        $this->RegisterAttributeInteger('NcMaxImported', 0);
+        $this->RegisterAttributeInteger('NcMirrorVisu', 0);
+        $this->RegisterAttributeInteger('NcWatched', 0);
+        $this->RegisterTimer('VisuSync', 0, 'NTF_SyncVisu($_IPS[\'TARGET\']);');
         // Baukasten: Vorlagen-Tabelle; die eingebauten Vorlagen stehen als Werkszeilen darin.
         $this->RegisterPropertyString('Templates', (string) json_encode(NotifyStore::DefaultTemplateRows()));
 
@@ -58,12 +72,18 @@ class NotificationTile extends IPSModuleStrict
         }
         // Neue Grenzen sofort anwenden.
         $this->Mutate(static fn(array $list): array => [$list, null]);
+        $this->SetupVisuSync();
     }
 
     public function MessageSink(int $TimeStamp, int $SenderID, int $Message, array $Data): void
     {
         if ($Message === IPS_KERNELSTARTED) {
             $this->ApplyChanges();
+            return;
+        }
+        if ($Message === IM_CHANGEATTRIBUTE && $SenderID === $this->ReadAttributeInteger('NcWatched')) {
+            $this->SendDebug('VisuSync', 'IM_CHANGEATTRIBUTE der Notification Control', 0);
+            $this->SyncVisu();
         }
     }
 
@@ -88,31 +108,127 @@ class NotificationTile extends IPSModuleStrict
         if ($msg['sound'] > 0 && $this->MediaObject($msg['sound'], 2, false) === null) {
             throw new Exception($this->Translate('Sound media not found'));
         }
+        // Weiterleiten in die Glocke einer Visu (Push aufs Handy): Option push, sonst Formular-Vorgabe.
+        $o = json_decode($Options, true);
+        $forwardVisu = $this->ReadPropertyInteger('ForwardVisuID');
+        $push = $forwardVisu > 0 && (is_array($o) && array_key_exists('push', $o) ? (bool) $o['push'] : $this->ReadPropertyBoolean('ForwardDefault'));
+        if ($push) {
+            // Merker, damit der Abgleich den Eintrag in der Glocke verknüpft statt ihn doppelt zu übernehmen.
+            $msg['forwardKey'] = VisuSync::Key($msg['title'], $msg['text']);
+            $msg['forwardVisu'] = $forwardVisu;
+        }
         $this->Mutate(function (array $list) use ($msg): array {
             $seq = $this->ReadAttributeInteger('Seq') + 1;
             $this->WriteAttributeInteger('Seq', $seq);
             return [NotifyStore::Insert($list, $msg, $seq, time()), null];
         });
         $this->SendDebug('Send', $msg['id'] . ' ' . $msg['title'], 0);
+        if ($push) {
+            $icon = $msg['icon'] !== '' ? $msg['icon'] : (self::LEVEL_ICONS[$msg['level']] ?? 'bell');
+            if (!$this->VisuPost($forwardVisu, $msg['title'], $msg['text'], $icon)) {
+                $this->SendDebug('Send', 'Weiterleiten an Visu #' . $forwardVisu . ' gescheitert', 0);
+            }
+        }
         return $msg['id'];
     }
 
     public function Delete(string $MessageID): bool
     {
-        return (bool) $this->Mutate(static function (array $list) use ($MessageID): array {
+        $nc = (int) (NotifyStore::Find($this->Load(), $MessageID)['nc']['id'] ?? 0);
+        $ok = (bool) $this->Mutate(static function (array $list) use ($MessageID): array {
             $rest = NotifyStore::Remove($list, $MessageID);
             return [$rest, count($rest) !== count($list)];
         });
+        if ($ok && $nc > 0) {
+            $this->NcDelete($nc); // auch aus der Glocke der Visu
+        }
+        return $ok;
     }
 
     public function Clear(): void
     {
+        $ncIds = $this->NcIds($this->Load(), false);
         $this->Mutate(static fn(array $list): array => [[], null]);
+        foreach ($ncIds as $nc) {
+            $this->NcDelete($nc);
+        }
     }
 
     public function MarkAllRead(): void
     {
+        $ncIds = $this->NcIds($this->Load(), true);
         $this->Mutate(static fn(array $list): array => [NotifyStore::MarkRead($list, null)[0], null]);
+        foreach ($ncIds as $nc) {
+            $this->NcRead($nc);
+        }
+    }
+
+    /**
+     * Abgleich mit der Glocke der gespiegelten Visu: neue Einträge übernehmen, Gelesen/Gelöscht
+     * nachziehen, weitergeleitete eigene Nachrichten verknüpfen (libs/VisuSync.php).
+     * Läuft bei jeder Änderung der Notification Control (IM_CHANGEATTRIBUTE) und als Rückfall per Timer.
+     */
+    public function SyncVisu(): void
+    {
+        $visu = $this->ReadPropertyInteger('MirrorVisuID');
+        $nc = $visu > 0 ? $this->NcList() : null;
+        if ($nc === null) {
+            return;
+        }
+        $plan = VisuSync::Plan($this->Load(), $nc, $visu, $this->ReadAttributeInteger('NcMaxImported'));
+        if (!$plan['imports'] && !$plan['links'] && !$plan['reads'] && !$plan['removes']) {
+            if ($plan['max'] !== $this->ReadAttributeInteger('NcMaxImported')) {
+                $this->WriteAttributeInteger('NcMaxImported', $plan['max']);
+            }
+            return;
+        }
+        $first = $this->GetBuffer('NcFirst') === '1';
+        $overlay = $this->ReadPropertyBoolean('MirrorOverlay');
+        $templates = $this->Templates();
+        $defaults = $this->Defaults();
+        $this->Mutate(function (array $list) use ($nc, $visu, $first, $overlay, $templates, $defaults): array {
+            // Im Semaphor neu planen: zwischen Lesen und Sperren kann sich die Liste geändert haben.
+            $plan = VisuSync::Plan($list, $nc, $visu, $this->ReadAttributeInteger('NcMaxImported'));
+            foreach ($list as &$m) {
+                if (isset($plan['links'][$m['id']])) {
+                    $m['nc'] = ['id' => $plan['links'][$m['id']], 'visu' => $visu, 'origin' => 'tile'];
+                    unset($m['forwardKey'], $m['forwardVisu']);
+                }
+                if (in_array($m['id'], $plan['reads'], true)) {
+                    $m['read'] = true;
+                }
+            }
+            unset($m);
+            foreach ($plan['removes'] as $id) {
+                $list = NotifyStore::Remove($list, $id);
+            }
+            $jetzt = time();
+            foreach ($plan['imports'] as $n) {
+                $map = VisuSync::MapIcon((string) ($n['Icon'] ?? ''));
+                $options = ['level' => $map['level'], 'overlay' => $overlay && !$first && (int) ($n['SentTime'] ?? 0) >= $jetzt - 120];
+                if ($map['icon'] !== '') {
+                    $options['icon'] = $map['icon'];
+                }
+                try {
+                    $msg = NotifyStore::Normalize((string) ($n['Title'] ?? ''), (string) ($n['Body'] ?? ''), (string) json_encode($options),
+                        $defaults, 'nc-' . (int) $n['NotificationID'], $templates);
+                } catch (InvalidArgumentException $e) {
+                    continue; // leerer Eintrag
+                }
+                $msg['read'] = !empty($n['IsRead']);
+                $msg['nc'] = ['id' => (int) $n['NotificationID'], 'visu' => $visu, 'origin' => 'visu', 'target' => (int) ($n['TargetID'] ?? 0)];
+                $seq = $this->ReadAttributeInteger('Seq') + 1;
+                $this->WriteAttributeInteger('Seq', $seq);
+                $list = NotifyStore::Insert($list, $msg, $seq, (int) ($n['SentTime'] ?? $jetzt) ?: $jetzt);
+            }
+            // Neueste oben, auch wenn ältere Einträge der Glocke nachträglich hinzukamen.
+            usort($list, static fn(array $a, array $b): int => ((int) $b['time'] <=> (int) $a['time']) ?: ((int) $b['seq'] <=> (int) $a['seq']));
+            $this->WriteAttributeInteger('NcMaxImported', $plan['max']);
+            return [$list, null];
+        });
+        $this->SetBuffer('NcFirst', '');
+        $this->SendDebug('VisuSync', sprintf('übernommen %d, verknüpft %d, gelesen %d, gelöscht %d',
+            count($plan['imports']), count($plan['links']), count($plan['reads']), count($plan['removes'])), 0);
     }
 
     /** Alle Nachrichten mit HTML und Bildangabe, neueste zuerst. */
@@ -182,10 +298,14 @@ class NotificationTile extends IPSModuleStrict
                 return;
             case 'Read':
                 $id = $this->MessageId($Value);
-                $this->Mutate(static function (array $list) use ($id): array {
+                $changed = $this->Mutate(static function (array $list) use ($id): array {
                     [$list, $changed] = NotifyStore::MarkRead($list, $id);
                     return [$list, $changed];
                 });
+                $nc = (int) (NotifyStore::Find($this->Load(), $id)['nc']['id'] ?? 0);
+                if ($changed && $nc > 0) {
+                    $this->NcRead($nc); // auch in der Glocke der Visu
+                }
                 return;
             case 'ReadAll':
                 $this->MarkAllRead();
@@ -366,6 +486,108 @@ class NotificationTile extends IPSModuleStrict
             'duration' => max(0, $this->ReadPropertyInteger('DefaultDuration')),
             'size'     => in_array($size, NotifyStore::SIZES, true) ? $size : 'medium',
         ];
+    }
+
+    /**
+     * Abgleich einrichten: Nachricht der Notification Control abonnieren, Rückfall-Timer, und bei
+     * einer neu gewählten Visu deren vorhandene Einträge einmal ohne Overlay übernehmen.
+     */
+    private function SetupVisuSync(): void
+    {
+        $alt = $this->ReadAttributeInteger('NcWatched');
+        if ($alt > 0 && @IPS_ObjectExists($alt)) {
+            $this->UnregisterMessage($alt, IM_CHANGEATTRIBUTE);
+        }
+        $this->WriteAttributeInteger('NcWatched', 0);
+        $visu = $this->ReadPropertyInteger('MirrorVisuID');
+        $nc = $this->NcInstance();
+        if ($visu <= 0 || $nc <= 0) {
+            $this->SetTimerInterval('VisuSync', 0);
+            return;
+        }
+        if ($this->ReadAttributeInteger('NcMirrorVisu') !== $visu) {
+            $this->WriteAttributeInteger('NcMirrorVisu', $visu);
+            $this->WriteAttributeInteger('NcMaxImported', 0);
+            $this->SetBuffer('NcFirst', '1');
+        }
+        $this->RegisterMessage($nc, IM_CHANGEATTRIBUTE);
+        $this->WriteAttributeInteger('NcWatched', $nc);
+        $this->SetTimerInterval('VisuSync', self::SYNC_MS);
+        $this->SyncVisu();
+    }
+
+    /** IDs der verknüpften Glocken-Einträge; mit `$nurUngelesen` nur die noch ungelesenen. */
+    private function NcIds(array $list, bool $nurUngelesen): array
+    {
+        $ids = [];
+        foreach ($list as $m) {
+            $id = (int) ($m['nc']['id'] ?? 0);
+            if ($id > 0 && (!$nurUngelesen || empty($m['read']))) {
+                $ids[] = $id;
+            }
+        }
+        return $ids;
+    }
+
+    protected function NcInstance(): int
+    {
+        $list = @IPS_GetInstanceListByModuleID(self::NC_GUID);
+        return is_array($list) && $list !== [] ? (int) $list[0] : 0;
+    }
+
+    /** Alle Visu-Benachrichtigungen; null, wenn die Notification Control nicht antwortet (NC_* nicht dokumentiert). */
+    protected function NcList(): ?array
+    {
+        $nc = $this->NcInstance();
+        if ($nc <= 0 || !function_exists('NC_GetNotifications')) {
+            return null;
+        }
+        try {
+            $r = @NC_GetNotifications($nc);
+        } catch (\Throwable $e) {
+            $this->SendDebug('VisuSync', $e->getMessage(), 0);
+            return null;
+        }
+        $r = is_string($r) ? json_decode($r, true) : $r;
+        return is_array($r) ? $r : null;
+    }
+
+    protected function NcRead(int $id): void
+    {
+        $nc = $this->NcInstance();
+        if ($nc > 0 && function_exists('NC_ReadNotification')) {
+            try {
+                @NC_ReadNotification($nc, $id);
+            } catch (\Throwable $e) {
+                $this->SendDebug('VisuSync', 'Gelesen #' . $id . ': ' . $e->getMessage(), 0);
+            }
+        }
+    }
+
+    protected function NcDelete(int $id): void
+    {
+        $nc = $this->NcInstance();
+        if ($nc > 0 && function_exists('NC_DeleteNotification')) {
+            try {
+                @NC_DeleteNotification($nc, $id);
+            } catch (\Throwable $e) {
+                $this->SendDebug('VisuSync', 'Löschen #' . $id . ': ' . $e->getMessage(), 0);
+            }
+        }
+    }
+
+    /** In die Glocke einer Visu (und als Push an deren Geräte) senden — dokumentierte Visu-Funktion. */
+    protected function VisuPost(int $visu, string $title, string $text, string $icon): bool
+    {
+        if (!function_exists('VISU_PostNotificationEx') || !@IPS_InstanceExists($visu)) {
+            return false;
+        }
+        try {
+            return @VISU_PostNotificationEx($visu, $title, $text, $icon, '', 0) !== false;
+        } catch (\Throwable $e) {
+            $this->SendDebug('Send', $e->getMessage(), 0);
+            return false;
+        }
     }
 
     /** Eingebaute Vorlagen, ergänzt und ersetzt durch die Zeilen der Tabelle. */

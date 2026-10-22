@@ -11,6 +11,7 @@ Eine Kachel für die Kachel-Visualisierung, an die Skripte, Module und Ereigniss
 - **Overlay** bleibt offen oder schließt sich nach einer festen Zeit. Es gibt die Größen klein, mittel, groß und Vollbild oder eine eigene Breite und Höhe. Mehrere Nachrichten stellen sich in eine Schlange.
 - **HTML** samt Skripten läuft in einem abgeschotteten Rahmen ohne Zugriff auf die Visualisierung.
 - **Aktion** „Benachrichtigung senden“ für Ereignisse und Automationen, ohne Skript.
+- **Glocke der Visualisierung:** Benachrichtigungen einer Kachel-Visualisierung spiegeln, gelesen und gelöscht in beide Richtungen, eigene Nachrichten als Push weiterleiten.
 - Variable **Ungelesen** für eigene Auswertungen.
 
 ## Installation
@@ -81,9 +82,19 @@ NTF_Send(12345, 'Wetter', '', json_encode([
 | `overlay` | `true` / `false` | aus dem Formular |
 | `duration` | Sekunden, `0` = bleibt offen | aus dem Formular |
 | `size` | `small`, `medium`, `large`, `full` oder `{"width": "600px", "height": "70vh"}` (px, %, vw, vh) | aus dem Formular |
+| `push` | `true` / `false`: zusätzlich in die Glocke der Weiterleitungs-Visu | aus dem Formular |
 | `id` | eigene Kennung; gleiche ID ersetzt die Nachricht | zufällig |
 
 Weitere Funktionen: `NTF_Delete($id, $MessageID)`, `NTF_Clear($id)`, `NTF_MarkAllRead($id)`, `NTF_GetNotifications($id)` (JSON).
+
+## Glocke der Visualisierung
+
+Im Formular unter „Visu-Benachrichtigungen (Glocke)“:
+
+- **Spiegeln:** Die Kachel zeigt zusätzlich die Benachrichtigungen einer Kachel-Visualisierung, also das, was mit `VISU_PostNotification` gesendet wurde. Neue erscheinen sofort und auf Wunsch als Overlay. Gelesen und Löschen wirken in beide Richtungen. Beim Einschalten werden vorhandene Einträge ohne Overlay übernommen.
+- **Weiterleiten:** Nachrichten der Kachel gehen zusätzlich in die Glocke einer Visualisierung und als Push an deren Geräte. Das geht je Nachricht mit `"push": true` oder für alle per Schalter. Ist es dieselbe Visualisierung wie beim Spiegeln, erscheint die Nachricht nur einmal. Symcon erlaubt 250 Push-Nachrichten pro Tag.
+
+Das Lesen der Glocke nutzt Funktionen der Notification Control (`NC_GetNotifications` u. a.), die nicht in der offiziellen Dokumentation stehen.
 
 ## Overlay
 
