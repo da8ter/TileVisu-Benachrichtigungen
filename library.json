@@ -1,0 +1,12 @@
+{
+    "id": "{4F2160B6-3A59-482E-81C3-BF1AA4B52874}",
+    "name": "TileVisu Benachrichtigungen",
+    "author": "Stephan Sprick",
+    "url": "https://github.com/da8ter/TileVisu-Benachrichtigungen.git",
+    "compatibility": {
+        "version": "8.2"
+    },
+    "version": "0.1",
+    "build": 1,
+    "date": 0
+}

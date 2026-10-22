@@ -1,0 +1,12 @@
+{
+    "id": "{94165A2C-B472-4394-901B-CF35983E7F95}",
+    "name": "Notification Tile",
+    "type": 3,
+    "vendor": "",
+    "aliases": [],
+    "parentRequirements": [],
+    "childRequirements": [],
+    "implemented": [],
+    "prefix": "NTF",
+    "url": "https://github.com/da8ter/TileVisu-Benachrichtigungen"
+}
