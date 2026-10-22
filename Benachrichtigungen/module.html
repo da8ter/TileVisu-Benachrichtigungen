@@ -43,8 +43,29 @@
   .del:hover { color: var(--fg); background: var(--border); }
   .empty { margin: auto; text-align: center; color: var(--muted); display: flex; flex-direction: column; gap: 8px; align-items: center; }
   .empty i { font-size: 28px; }
+  /* 1x1: Glocke, Zahl der ungelesenen, Titel der neuesten (Modus nach verfügbarem Platz, siehe modus()). */
+  #mini { display: none; height: 100%; align-items: center; gap: 10px; cursor: pointer; min-width: 0; }
+  body.mode-mini #bar, body.mode-mini #list { display: none; }
+  body.mode-mini #mini { display: flex; }
+  #mini .glocke { flex: 0 0 auto; font-size: 26px; color: var(--muted); display: flex; }
+  #mini .zahl { flex: 0 0 auto; font-size: 30px; font-weight: 800; line-height: 1; color: var(--muted); }
+  #mini.hat .glocke, #mini.hat .zahl { color: var(--akzent); }
+  #mini .neu { flex: 1; min-width: 0; font-size: 13px; line-height: 1.25; color: var(--muted); overflow: hidden;
+               display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+  body.mini-schmal #mini .neu { display: none; }
+  body.mini-schmal #mini { justify-content: center; }
+  /* 2x2: schlanke Zeilen ohne Text und Löschknopf */
+  body.mode-compact #bar { min-height: 22px; margin-bottom: 4px; }
+  body.mode-compact #clear { display: none; }
+  body.mode-compact #list { gap: 4px; }
+  body.mode-compact .row { padding: 5px 6px; gap: 8px; align-items: center; border-radius: 10px; }
+  body.mode-compact .ico { flex-basis: 26px; width: 26px; height: 26px; border-radius: 8px; font-size: 13px; }
+  body.mode-compact .x, body.mode-compact .del { display: none; }
+  body.mode-compact .t { font-size: 13px; }
+  body.mode-compact .time { font-size: 11px; }
 </style>
 <div id="wrap">
+  <div id="mini" role="button" tabindex="0"><span class="glocke"><i class="fa-light fa-bell"></i></span><span class="zahl"></span><span class="neu"></span></div>
   <div id="bar"><span id="count"></span><button id="clear" class="icon-btn" type="button"><i class="fa-light fa-trash-can"></i></button></div>
   <div id="list"></div>
 </div>
@@ -218,7 +239,40 @@
     return row;
   }
 
+  // Ansicht nach Platz: 1x1 (mini), 2x2 (compact), größer (voll). Gemessen am Inhaltsbereich ohne Symcons Ränder.
+  var miniEl = document.getElementById('mini');
+  function modus() {
+    var cs = getComputedStyle(document.documentElement);
+    var mt = parseFloat(cs.getPropertyValue('--mt')) || 0, mb = parseFloat(cs.getPropertyValue('--mb')) || 0, ms = parseFloat(cs.getPropertyValue('--ms')) || 0;
+    var h = window.innerHeight - mt - mb, w = window.innerWidth - 2 * ms;
+    var m = (h < 100 || w < 200) ? 'mini' : (h < 250 || w < 380) ? 'compact' : 'full';
+    document.body.classList.toggle('mode-mini', m === 'mini');
+    document.body.classList.toggle('mode-compact', m === 'compact');
+    document.body.classList.toggle('mini-schmal', m === 'mini' && w < 170);
+  }
+  window.addEventListener('resize', modus);
+  function neuesteUngelesen() {
+    return state.messages.filter(function (m) { return !m.read; })[0] || state.messages[0] || null;
+  }
+  function miniZeichnen() {
+    var m = neuesteUngelesen();
+    miniEl.classList.toggle('hat', state.unread > 0);
+    miniEl.querySelector('.zahl').textContent = String(state.unread);
+    miniEl.querySelector('.glocke i').className = 'fa-light ' + (state.unread > 0 ? 'fa-bell-ring' : 'fa-bell');
+    miniEl.querySelector('.neu').textContent = m ? (m.title || m.text || '') : L.empty;
+    miniEl.title = m ? (m.title || '') : L.empty;
+  }
+  function miniOeffnen() {
+    var m = neuesteUngelesen();
+    if (!m) return;
+    overlay(function (api) { api.show(nutzlast(m, true)); });
+    if (!m.read) requestAction('Read', m.id);
+  }
+  miniEl.addEventListener('click', miniOeffnen);
+  miniEl.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); miniOeffnen(); } });
+
   function zeichnen() {
+    miniZeichnen();
     listEl.textContent = '';
     var n = state.messages.length;
     countEl.textContent = !n ? '' : state.unread > 0 ? L.unread.replace('%1', String(state.unread))
@@ -265,6 +319,7 @@
     if (api && ziel !== window && !state.config.everywhere) api.closeOwner(OWNER);
   });
 
+  modus();
   zeichnen();
   neueZeigen();
 })();

@@ -7,6 +7,7 @@ Eine Kachel für die Kachel-Visualisierung, an die Skripte, Module und Ereigniss
 - **Nachrichten** mit Titel, Text, Icon (Font Awesome, Light), Bild (URL, Medienobjekt oder data-URI), Ton (Sound-Medienobjekt) und optional HTML.
 - **Vorlagen** für typische Fälle (Alarm, Warnung, Info, Erledigt, Türklingel, Erinnerung) mit eigenem Aussehen.
 - **Stufen** `info`, `success`, `warning`, `alarm` mit eigener Farbe und eigenem Icon.
+- **Kleine Kacheln:** In 1×1 zeigt die Kachel Glocke und Zahl der ungelesenen Nachrichten (ein Tipp öffnet die neueste), in 2×2 schlanke Zeilen. Die Ansicht wählt sich nach dem verfügbaren Platz.
 - **Liste** mit den neuesten Nachrichten oben. Ungelesene sind markiert, jede Nachricht lässt sich einzeln oder alle zusammen löschen. Ein Tipp öffnet die Nachricht.
 - **Overlay** bleibt offen oder schließt sich nach einer festen Zeit. Es gibt die Größen klein, mittel, groß und Vollbild oder eine eigene Breite und Höhe. Mehrere Nachrichten stellen sich in eine Schlange.
 - **HTML** samt Skripten läuft in einem abgeschotteten Rahmen ohne Zugriff auf die Visualisierung.
