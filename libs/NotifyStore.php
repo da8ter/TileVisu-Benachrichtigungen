@@ -13,6 +13,20 @@ final class NotifyStore
 {
     public const LEVELS = ['info', 'success', 'warning', 'alarm'];
     public const SIZES = ['small', 'medium', 'large', 'full'];
+    /** Darstellungen des Overlays: Karte, farbiger Banner, Icon mittig, kleine Einblendung, Bild oben. */
+    public const LAYOUTS = ['card', 'banner', 'hero', 'toast', 'photo'];
+    /**
+     * Vorlagen für typische Szenarien: Darstellung plus Vorgaben. Was die Nachricht selbst angibt,
+     * gilt vor der Vorlage; die Vorlage gilt vor den Vorgaben aus dem Formular.
+     */
+    public const TEMPLATES = [
+        'alarm'    => ['layout' => 'banner', 'level' => 'alarm', 'icon' => 'siren-on', 'size' => 'large', 'duration' => 0, 'overlay' => true],
+        'warning'  => ['layout' => 'banner', 'level' => 'warning', 'icon' => 'triangle-exclamation', 'size' => 'medium', 'duration' => 0, 'overlay' => true],
+        'info'     => ['layout' => 'toast', 'level' => 'info', 'icon' => 'circle-info', 'duration' => 8, 'overlay' => true],
+        'success'  => ['layout' => 'toast', 'level' => 'success', 'icon' => 'circle-check', 'duration' => 8, 'overlay' => true],
+        'doorbell' => ['layout' => 'photo', 'level' => 'info', 'icon' => 'bell', 'size' => 'large', 'duration' => 30, 'overlay' => true],
+        'reminder' => ['layout' => 'hero', 'level' => 'info', 'icon' => 'calendar-clock', 'size' => 'medium', 'duration' => 0, 'overlay' => true],
+    ];
     public const MAX_TITLE = 200;
     public const MAX_TEXT = 4000;
     /** HTML-Körper je Nachricht; liegt im Attribut und geht über den Hook (Grenze 1 MiB je Antwort). */
@@ -31,6 +45,18 @@ final class NotifyStore
     public static function Normalize(string $title, string $text, string $options, array $defaults, string $newId): array
     {
         $o = self::Options($options);
+        $template = '';
+        if (array_key_exists('template', $o) && $o['template'] !== '' && $o['template'] !== null) {
+            $template = is_string($o['template']) ? strtolower(trim($o['template'])) : '';
+            if (!isset(self::TEMPLATES[$template])) {
+                throw new InvalidArgumentException('Unknown template');
+            }
+            $o = array_merge(self::TEMPLATES[$template], $o);
+        }
+        $layout = array_key_exists('layout', $o) ? (is_string($o['layout']) ? strtolower(trim($o['layout'])) : '') : 'card';
+        if (!in_array($layout, self::LAYOUTS, true)) {
+            throw new InvalidArgumentException('Invalid layout');
+        }
         $title = self::Cut(trim($title), self::MAX_TITLE);
         $text = self::Cut(trim(str_replace("\r\n", "\n", $text)), self::MAX_TEXT);
 
@@ -72,6 +98,8 @@ final class NotifyStore
             'sound'    => $sound,
             'html'     => $html,
             'level'    => $level,
+            'template' => $template,
+            'layout'   => $layout,
             'overlay'  => array_key_exists('overlay', $o) ? self::Bool($o['overlay']) : (bool) ($defaults['overlay'] ?? true),
             'duration' => array_key_exists('duration', $o) ? self::Duration($o['duration']) : self::Duration($defaults['duration'] ?? 0),
             'size'     => array_key_exists('size', $o) ? self::Size($o['size']) : self::Size($defaults['size'] ?? 'medium'),
@@ -179,6 +207,7 @@ final class NotifyStore
             'html'     => ($m['html'] ?? '') !== '' && $hookBase !== '' ? $hookBase . '&k=html&m=' . rawurlencode($id) . '&v=' . $seq : '',
             'sound'    => (int) ($m['sound'] ?? 0) > 0 && $hookBase !== '' ? $hookBase . '&k=snd&m=' . rawurlencode($id) . '&v=' . $seq : '',
             'level'    => (string) $m['level'],
+            'layout'   => (string) ($m['layout'] ?? 'card'),
             'overlay'  => (bool) $m['overlay'],
             'duration' => (int) $m['duration'],
             'size'     => $m['size'],

@@ -22,7 +22,7 @@
  */
 (function () {
   'use strict';
-  var VERSION = 5; // 2: Ton (play), 3: Löschen im Overlay, 4: veraltetes Stylesheet ersetzen, 5: Mülleimer aus Font Awesome
+  var VERSION = 7; // 2: Ton, 3: Löschen, 4: Stylesheet ersetzen, 5: Mülleimer aus Font Awesome, 6: Darstellungen (Vorlagen), 7: leerer Körper entfällt
   var w = window, d = document;
   var vorher = w.__symconNotify;
   if (vorher && vorher.version >= VERSION) return;
@@ -72,8 +72,39 @@
     '.ntf-del svg[fill="none"]{fill:none}',
     '.ntf-bar{position:absolute;left:0;bottom:0;height:3px;width:100%;transform-origin:left;animation-name:ntf-bar;animation-timing-function:linear;animation-fill-mode:forwards}',
     '.ntf-card:hover .ntf-bar{animation-play-state:paused}',
-    '@keyframes ntf-bar{from{transform:scaleX(1)}to{transform:scaleX(0)}}'
+    '@keyframes ntf-bar{from{transform:scaleX(1)}to{transform:scaleX(0)}}',
+    '.ntf-htext{flex:1;min-width:0}',
+    '.ntf-sub{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:4px}',
+    // Banner: farbiger Kopf, großes Icon auf dunklerer Fläche, großer Titel
+    '.ntf-l-banner .ntf-head{padding:26px 22px 26px 24px;gap:20px;color:#fff}',
+    '.ntf-l-banner .ntf-icon{flex-basis:80px;width:80px;height:80px;border-radius:20px}',
+    '.ntf-l-banner .ntf-icon svg{width:44px;height:44px}',
+    '.ntf-l-banner .ntf-title{font-size:34px;font-weight:800;line-height:1.1}',
+    '.ntf-l-banner .ntf-sub{font-size:20px;font-weight:600;opacity:.95;margin-top:8px}',
+    '.ntf-l-banner .ntf-x{color:#fff;opacity:.85;align-self:flex-start}',
+    '.ntf-l-banner .ntf-body{padding-top:16px}',
+    // Hero: großes rundes Icon mittig, Titel und Text darunter
+    '.ntf-l-hero .ntf-head{flex-direction:column;text-align:center;padding:36px 28px 8px;gap:16px}',
+    '.ntf-l-hero .ntf-htext{flex:0 0 auto}',
+    '.ntf-l-hero .ntf-icon{flex:0 0 auto;width:100px;height:100px;border-radius:50%}',
+    '.ntf-l-hero .ntf-icon svg{width:52px;height:52px}',
+    '.ntf-l-hero .ntf-title{font-size:30px;font-weight:800;line-height:1.15}',
+    '.ntf-l-hero .ntf-sub{font-size:19px;opacity:.8;margin-top:10px}',
+    '.ntf-l-hero .ntf-x{position:absolute;top:12px;right:12px}',
+    // Foto: Bild randlos oben
+    '.ntf-photo{display:block;width:100%;max-height:58vh;object-fit:cover;flex:0 0 auto}',
+    '.ntf-l-photo .ntf-head{padding-top:16px}',
+    // Toast: kleine Einblendung oben, ohne Abdunkeln, die Visu bleibt bedienbar
+    '.ntf-toast-layer{background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;pointer-events:none;',
+    'align-items:flex-start;padding-top:16px;animation:ntf-drop .22s ease-out}',
+    '@keyframes ntf-drop{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}',
+    '.ntf-toast-layer .ntf-card{pointer-events:auto;box-shadow:0 12px 40px rgba(0,0,0,.3)}',
+    '.ntf-l-toast .ntf-head{padding:14px 10px 14px 14px}',
+    '.ntf-l-toast .ntf-title{font-size:16px}',
+    '.ntf-l-toast .ntf-sub{font-size:14px;opacity:.8;margin-top:2px}',
+    '.ntf-l-toast .ntf-foot{display:none}'
   ].join('');
+  var LAYOUTS = ['card', 'banner', 'hero', 'toast', 'photo'];
 
   var queue = [];        // [{owner, msg, theme, labels, icon}]
   var layer = null;      // sichtbares Overlay
@@ -156,48 +187,83 @@
     if (e.playSound && m.sound && !e.played) { e.played = true; play(m.sound); }
     var card = hex(t.card, '#ffffff'), content = hex(t.content, '#1d1d1f'), accent = hex(t.accent, '#00cdab');
     var level = LEVEL[m.level] || accent;
+    var layout = LAYOUTS.indexOf(m.layout) >= 0 ? m.layout : 'card';
+    // Text steht bei Banner, Hero und Toast im Kopf, sonst im Körper.
+    var textImKopf = layout === 'banner' || layout === 'hero' || layout === 'toast';
 
     layer = d.createElement('div');
-    layer.className = 'ntf-layer';
-    layer.setAttribute('role', 'dialog');
-    layer.setAttribute('aria-modal', 'true');
+    layer.className = 'ntf-layer' + (layout === 'toast' ? ' ntf-toast-layer' : '');
+    if (layout === 'toast') {
+      layer.setAttribute('role', 'status');
+      layer.setAttribute('aria-live', 'polite');
+    } else {
+      layer.setAttribute('role', 'dialog');
+      layer.setAttribute('aria-modal', 'true');
+    }
     var box = d.createElement('div');
-    box.className = 'ntf-card';
+    box.className = 'ntf-card ntf-l-' + layout;
     box.style.background = card;
     box.style.color = content;
     var size = m.size && m.size.preset ? SIZE[m.size.preset] || SIZE.medium : (m.size || SIZE.medium);
+    if (layout === 'toast' && m.size && m.size.preset) size = { width: 'min(440px, 94vw)' };
     if (size.width) box.style.width = size.width;
     if (size.height) { box.style.height = size.height; box.classList.add('ntf-fixed'); }
+
+    if (layout === 'photo' && m.image) {
+      var foto = d.createElement('img');
+      foto.className = 'ntf-photo';
+      foto.alt = '';
+      foto.src = m.image;
+      box.appendChild(foto);
+    }
 
     var head = d.createElement('div');
     head.className = 'ntf-head';
     var ic = d.createElement('div');
     ic.className = 'ntf-icon';
-    ic.style.color = level;
-    ic.style.background = level + '22';
+    if (layout === 'banner') {
+      head.style.background = level;
+      ic.style.color = '#fff';
+      ic.style.background = 'rgba(0,0,0,.2)';
+    } else if (layout === 'hero') {
+      ic.style.color = '#fff';
+      ic.style.background = level;
+    } else {
+      ic.style.color = level;
+      ic.style.background = level + '22';
+    }
     var svg = svgNode(iconMarkup(e)) || svgNode(LEVEL_SVG[m.level] || LEVEL_SVG.info);
     if (svg) ic.appendChild(svg);
+    var htext = d.createElement('div');
+    htext.className = 'ntf-htext';
     var title = d.createElement('div');
     title.className = 'ntf-title';
     title.textContent = m.title || '';
+    htext.appendChild(title);
+    if (textImKopf && m.text) {
+      var sub = d.createElement('div');
+      sub.className = 'ntf-sub';
+      sub.textContent = m.text;
+      htext.appendChild(sub);
+    }
     var x = d.createElement('button');
     x.className = 'ntf-x';
     x.type = 'button';
     x.setAttribute('aria-label', l.close || 'Close');
     x.textContent = '×';
     x.addEventListener('click', next);
-    head.appendChild(ic); head.appendChild(title); head.appendChild(x);
+    head.appendChild(ic); head.appendChild(htext); head.appendChild(x);
     box.appendChild(head);
 
     var body = d.createElement('div');
     body.className = 'ntf-body';
-    if (m.text) {
+    if (m.text && !textImKopf) {
       var p = d.createElement('div');
       p.className = 'ntf-text';
       p.textContent = m.text;
       body.appendChild(p);
     }
-    if (m.image) {
+    if (m.image && layout !== 'photo') {
       var img = d.createElement('img');
       img.className = 'ntf-img';
       img.alt = '';
@@ -212,7 +278,8 @@
       frame.src = m.html + '&c=' + content.slice(1);
       body.appendChild(frame);
     }
-    box.appendChild(body);
+    // Ein leerer Körper hinterließe nur Abstand (z. B. Banner ohne Bild und HTML).
+    if (body.childNodes.length) box.appendChild(body);
 
     var foot = d.createElement('div');
     foot.className = 'ntf-foot';

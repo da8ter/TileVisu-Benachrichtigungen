@@ -18,8 +18,44 @@
         },
         {
             "type": "Select",
+            "name": "TEMPLATE",
+            "caption": "Template (sets level, icon, size, duration and look)",
+            "value": "",
+            "options": [
+                {
+                    "caption": "None",
+                    "value": ""
+                },
+                {
+                    "caption": "Alarm",
+                    "value": "alarm"
+                },
+                {
+                    "caption": "Warning",
+                    "value": "warning"
+                },
+                {
+                    "caption": "Info (small, top)",
+                    "value": "info"
+                },
+                {
+                    "caption": "Done (small, top)",
+                    "value": "success"
+                },
+                {
+                    "caption": "Doorbell (with image)",
+                    "value": "doorbell"
+                },
+                {
+                    "caption": "Reminder",
+                    "value": "reminder"
+                }
+            ]
+        },
+        {
+            "type": "Select",
             "name": "LEVEL",
-            "caption": "Level",
+            "caption": "Level (without template)",
             "value": "info",
             "options": [
                 {
@@ -55,13 +91,13 @@
         {
             "type": "CheckBox",
             "name": "OVERLAY",
-            "caption": "Show as overlay",
+            "caption": "Show as overlay (without template)",
             "value": true
         },
         {
             "type": "NumberSpinner",
             "name": "DURATION",
-            "caption": "Close after (0 = stays open)",
+            "caption": "Close after (0 = stays open) (without template)",
             "suffix": " s",
             "minimum": 0,
             "maximum": 86400,
@@ -70,7 +106,7 @@
         {
             "type": "Select",
             "name": "SIZE",
-            "caption": "Size",
+            "caption": "Size (without template)",
             "value": "medium",
             "options": [
                 {
@@ -92,7 +128,7 @@
             ]
         }
     ],
-    "action": "NTF_Send($_IPS['TARGET'], (string) $_IPS['TITLE'], (string) $_IPS['TEXT'], json_encode(['level' => $_IPS['LEVEL'], 'icon' => (string) $_IPS['ICON'], 'sound' => (int) $_IPS['SOUND'], 'overlay' => (bool) $_IPS['OVERLAY'], 'duration' => (int) $_IPS['DURATION'], 'size' => $_IPS['SIZE']]));",
+    "action": "$o = $_IPS['TEMPLATE'] !== '' ? array_filter(['template' => $_IPS['TEMPLATE'], 'icon' => (string) $_IPS['ICON'], 'sound' => (int) $_IPS['SOUND']]) : ['level' => $_IPS['LEVEL'], 'icon' => (string) $_IPS['ICON'], 'sound' => (int) $_IPS['SOUND'], 'overlay' => (bool) $_IPS['OVERLAY'], 'duration' => (int) $_IPS['DURATION'], 'size' => $_IPS['SIZE']]; NTF_Send($_IPS['TARGET'], (string) $_IPS['TITLE'], (string) $_IPS['TEXT'], json_encode($o));",
     "restrictions": {
         "objectType": [
             1
@@ -109,7 +145,6 @@
             "Shows a message in the notification tile, optionally as an overlay.": "Zeigt eine Nachricht in der Benachrichtigungs-Kachel, auf Wunsch als Overlay.",
             "Title": "Titel",
             "Text": "Text",
-            "Level": "Stufe",
             "Info": "Info",
             "Success": "Erfolg",
             "Warning": "Warnung",
@@ -122,7 +157,17 @@
             "Medium": "Mittel",
             "Large": "Groß",
             "Full screen": "Vollbild",
-            "Sound (optional, sound media object)": "Ton (optional, Sound-Medienobjekt)"
+            "Sound (optional, sound media object)": "Ton (optional, Sound-Medienobjekt)",
+            "Template (sets level, icon, size, duration and look)": "Vorlage (bestimmt Stufe, Icon, Größe, Dauer und Aussehen)",
+            "None": "Keine",
+            "Info (small, top)": "Info (klein, oben)",
+            "Done (small, top)": "Erledigt (klein, oben)",
+            "Doorbell (with image)": "Türklingel (mit Bild)",
+            "Reminder": "Erinnerung",
+            "Level (without template)": "Stufe (ohne Vorlage)",
+            "Show as overlay (without template)": "Als Overlay zeigen (ohne Vorlage)",
+            "Close after (0 = stays open) (without template)": "Schließen nach (0 = bleibt offen, ohne Vorlage)",
+            "Size (without template)": "Größe (ohne Vorlage)"
         }
     },
     "format": "Send notification: {TITLE}",

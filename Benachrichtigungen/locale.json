@@ -23,7 +23,6 @@
             "Send test message": "Testnachricht senden",
             "Delete all messages": "Alle Nachrichten löschen",
             "Delete all messages?": "Alle Nachrichten löschen?",
-            "Example: NTF_Send(12345, 'Washing machine', 'Done', '{\"level\":\"success\",\"icon\":\"washing-machine\",\"duration\":30}');": "Beispiel: NTF_Send(12345, 'Waschmaschine', 'Fertig', '{\"level\":\"success\",\"icon\":\"washing-machine\",\"duration\":30}');",
             "Test message": "Testnachricht",
             "This is how a notification looks.": "So sieht eine Benachrichtigung aus.",
             "HTML content with a script:": "HTML-Inhalt mit Skript:",
@@ -55,7 +54,10 @@
             "1 message": "1 Nachricht",
             "Invalid sound": "Ungültiger Ton",
             "Sound media not found": "Sound-Medienobjekt nicht gefunden",
-            "Options (JSON, all optional): icon, image (URL, media ID or data URI), sound (ID of a sound media object), html, level (info, success, warning, alarm), overlay (true/false), duration (seconds, 0 = stays open), size (small, medium, large, full or {\"width\":\"600px\",\"height\":\"70vh\"}), id (same id replaces the message).": "Optionen (JSON, alle optional): icon, image (URL, Medien-ID oder data-URI), sound (ID eines Sound-Medienobjekts), html, level (info, success, warning, alarm), overlay (true/false), duration (Sekunden, 0 = bleibt offen), size (small, medium, large, full oder {\"width\":\"600px\",\"height\":\"70vh\"}), id (gleiche ID ersetzt die Nachricht)."
+            "Unknown template": "Unbekannte Vorlage (alarm, warning, info, success, doorbell, reminder)",
+            "Invalid layout": "Ungültige Darstellung (card, banner, hero, toast, photo)",
+            "Options (JSON, all optional): template (alarm, warning, info, success, doorbell, reminder), icon, image (URL, media ID or data URI), sound (ID of a sound media object), html, level (info, success, warning, alarm), overlay (true/false), duration (seconds, 0 = stays open), size (small, medium, large, full or {\"width\":\"600px\",\"height\":\"70vh\"}), layout (card, banner, hero, toast, photo), id (same id replaces the message).": "Optionen (JSON, alle optional): template (alarm, warning, info, success, doorbell, reminder), icon, image (URL, Medien-ID oder data-URI), sound (ID eines Sound-Medienobjekts), html, level (info, success, warning, alarm), overlay (true/false), duration (Sekunden, 0 = bleibt offen), size (small, medium, large, full oder {\"width\":\"600px\",\"height\":\"70vh\"}), layout (card, banner, hero, toast, photo), id (gleiche ID ersetzt die Nachricht).",
+            "Example: NTF_Send(12345, 'Water alarm', 'Basement', '{\"template\":\"alarm\"}');": "Beispiel: NTF_Send(12345, 'Wasseralarm', 'Keller', '{\"template\":\"alarm\"}');"
         }
     }
 }

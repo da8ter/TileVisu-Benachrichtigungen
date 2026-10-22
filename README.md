@@ -5,6 +5,7 @@ Eine Kachel für die Kachel-Visualisierung, an die Skripte, Module und Ereigniss
 ## Funktionen
 
 - **Nachrichten** mit Titel, Text, Icon (Font Awesome, Light), Bild (URL, Medienobjekt oder data-URI), Ton (Sound-Medienobjekt) und optional HTML.
+- **Vorlagen** für typische Fälle (Alarm, Warnung, Info, Erledigt, Türklingel, Erinnerung) mit eigenem Aussehen.
 - **Stufen** `info`, `success`, `warning`, `alarm` mit eigener Farbe und eigenem Icon.
 - **Liste** mit den neuesten Nachrichten oben. Ungelesene sind markiert, jede Nachricht lässt sich einzeln oder alle zusammen löschen. Ein Tipp öffnet die Nachricht.
 - **Overlay** bleibt offen oder schließt sich nach einer festen Zeit. Es gibt die Größen klein, mittel, groß und Vollbild oder eine eigene Breite und Höhe. Mehrere Nachrichten stellen sich in eine Schlange.
@@ -15,6 +16,27 @@ Eine Kachel für die Kachel-Visualisierung, an die Skripte, Module und Ereigniss
 ## Installation
 
 Im Module Control die Adresse `https://github.com/da8ter/TileVisu-Benachrichtigungen` hinzufügen. Danach die Instanz „Benachrichtigungs-Kachel“ anlegen und in der Kachel-Visualisierung platzieren.
+
+## Vorlagen
+
+Eine Vorlage bestimmt Aussehen, Stufe, Icon, Größe und Dauer. Was die Nachricht selbst angibt, gilt vor der Vorlage.
+
+```php
+NTF_Send(12345, 'Wasseralarm', 'Keller: Sensor Waschküche meldet Wasser', '{"template":"alarm"}');
+NTF_Send(12345, 'Waschmaschine fertig', 'Bitte ausräumen', '{"template":"success","icon":"washing-machine"}');
+NTF_Send(12345, 'Es hat geklingelt', 'Haustür', json_encode(['template' => 'doorbell', 'image' => 23456, 'sound' => 34567]));
+```
+
+| Vorlage | Für | Aussehen | Vorgaben |
+|---|---|---|---|
+| `alarm` | Wasser, Rauch, Einbruch | roter Banner, großes Icon, großer Titel | groß, bleibt offen |
+| `warning` | Fenster offen, Batterie leer | oranger Banner | mittel, bleibt offen |
+| `info` | Hinweise | kleine Einblendung oben, Visu bleibt bedienbar | 8 s |
+| `success` | Erledigtes (Waschmaschine fertig) | kleine grüne Einblendung oben | 8 s |
+| `doorbell` | Türklingel, Besucher | Bild randlos oben (z. B. Kamerabild) | groß, 30 s |
+| `reminder` | Müll, Termine | großes rundes Icon mittig, großer Titel | mittel, bleibt offen |
+
+Die Darstellung lässt sich auch ohne Vorlage wählen: `layout` = `card` (Vorgabe), `banner`, `hero`, `toast`, `photo`.
 
 ## Nachrichten senden
 
@@ -41,6 +63,8 @@ NTF_Send(12345, 'Wetter', '', json_encode([
 
 | Option | Werte | Vorgabe |
 |---|---|---|
+| `template` | `alarm`, `warning`, `info`, `success`, `doorbell`, `reminder` | – |
+| `layout` | `card`, `banner`, `hero`, `toast`, `photo` | aus der Vorlage, sonst `card` |
 | `level` | `info`, `success`, `warning`, `alarm` | `info` |
 | `icon` | Font-Awesome-Name, z. B. `bell` oder `fa-light fa-bell` | Icon der Stufe |
 | `image` | `https://…`, ID eines Bild-Medienobjekts oder `data:image/…;base64,…` (bis 768 kB) | – |
