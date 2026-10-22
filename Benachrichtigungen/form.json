@@ -1,32 +1,72 @@
 {
     "elements": [
-        { "type": "Label", "caption": "Scripts and modules send messages with NTF_Send. The tile lists them and can show new ones as an overlay above the whole visualization." },
+        {
+            "type": "Label",
+            "caption": "Scripts and modules send messages with NTF_Send. The tile lists them and can show new ones as an overlay above the whole visualization."
+        },
         {
             "type": "ExpansionPanel",
             "caption": "Overlay",
             "expanded": true,
             "items": [
-                { "type": "CheckBox", "name": "OverlayDefault", "caption": "Show new messages as overlay (unless the message says otherwise)" },
+                {
+                    "type": "CheckBox",
+                    "name": "OverlayDefault",
+                    "caption": "Show new messages as overlay (unless the message says otherwise)"
+                },
                 {
                     "type": "RowLayout",
                     "items": [
-                        { "type": "NumberSpinner", "name": "DefaultDuration", "caption": "Close after (0 = stays open)", "suffix": " s", "minimum": 0, "maximum": 86400 },
+                        {
+                            "type": "NumberSpinner",
+                            "name": "DefaultDuration",
+                            "caption": "Close after (0 = stays open)",
+                            "suffix": " s",
+                            "minimum": 0,
+                            "maximum": 86400
+                        },
                         {
                             "type": "Select",
                             "name": "DefaultSize",
                             "caption": "Size",
                             "options": [
-                                { "caption": "Small", "value": "small" },
-                                { "caption": "Medium", "value": "medium" },
-                                { "caption": "Large", "value": "large" },
-                                { "caption": "Full screen", "value": "full" }
+                                {
+                                    "caption": "Small",
+                                    "value": "small"
+                                },
+                                {
+                                    "caption": "Medium",
+                                    "value": "medium"
+                                },
+                                {
+                                    "caption": "Large",
+                                    "value": "large"
+                                },
+                                {
+                                    "caption": "Full screen",
+                                    "value": "full"
+                                }
                             ]
                         }
                     ]
                 },
-                { "type": "CheckBox", "name": "OverlayEverywhere", "caption": "Show overlay on every page" },
-                { "type": "Label", "caption": "Off: the overlay appears only while the page with this tile is open. On: it appears on every page of the browser visualization as soon as the tile was loaded once (for example on the start page). The Symcon app shows the overlay inside the tile only." },
-                { "type": "NumberSpinner", "name": "PollInterval", "caption": "Check interval (every page)", "suffix": " s", "minimum": 1, "maximum": 60 }
+                {
+                    "type": "CheckBox",
+                    "name": "OverlayEverywhere",
+                    "caption": "Show overlay on every page"
+                },
+                {
+                    "type": "Label",
+                    "caption": "Off: the overlay appears only while the page with this tile is open. On: it appears on every page of the browser visualization as soon as the tile was loaded once (for example on the start page). The Symcon app shows the overlay inside the tile only."
+                },
+                {
+                    "type": "NumberSpinner",
+                    "name": "PollInterval",
+                    "caption": "Check interval (every page)",
+                    "suffix": " s",
+                    "minimum": 1,
+                    "maximum": 60
+                }
             ]
         },
         {
@@ -36,8 +76,213 @@
                 {
                     "type": "RowLayout",
                     "items": [
-                        { "type": "NumberSpinner", "name": "MaxMessages", "caption": "Keep at most", "suffix": " messages", "minimum": 1, "maximum": 500 },
-                        { "type": "NumberSpinner", "name": "MaxAgeDays", "caption": "Delete after (0 = never)", "suffix": " days", "minimum": 0, "maximum": 3650 }
+                        {
+                            "type": "NumberSpinner",
+                            "name": "MaxMessages",
+                            "caption": "Keep at most",
+                            "suffix": " messages",
+                            "minimum": 1,
+                            "maximum": 500
+                        },
+                        {
+                            "type": "NumberSpinner",
+                            "name": "MaxAgeDays",
+                            "caption": "Delete after (0 = never)",
+                            "suffix": " days",
+                            "minimum": 0,
+                            "maximum": 3650
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "ExpansionPanel",
+            "caption": "Templates",
+            "items": [
+                {
+                    "type": "Label",
+                    "caption": "Templates set look, level, color, icon, size, text size, duration and sound. Send with '{\"template\":\"name\"}'. Built-in templates (alarm, warning, info, success, doorbell, reminder) can be changed here; deleted ones keep their factory settings."
+                },
+                {
+                    "type": "List",
+                    "name": "Templates",
+                    "caption": "Templates",
+                    "rowCount": 8,
+                    "add": true,
+                    "delete": true,
+                    "sort": {
+                        "column": "Name",
+                        "direction": "ascending"
+                    },
+                    "columns": [
+                        {
+                            "caption": "Name",
+                            "name": "Name",
+                            "width": "130px",
+                            "add": "",
+                            "edit": {
+                                "type": "ValidationTextBox",
+                                "validate": "^[a-z0-9_-]{1,32}$"
+                            }
+                        },
+                        {
+                            "caption": "Look",
+                            "name": "Layout",
+                            "width": "130px",
+                            "add": "card",
+                            "edit": {
+                                "type": "Select",
+                                "options": [
+                                    {
+                                        "caption": "Card",
+                                        "value": "card"
+                                    },
+                                    {
+                                        "caption": "Banner",
+                                        "value": "banner"
+                                    },
+                                    {
+                                        "caption": "Big icon",
+                                        "value": "hero"
+                                    },
+                                    {
+                                        "caption": "Small, top",
+                                        "value": "toast"
+                                    },
+                                    {
+                                        "caption": "Image on top",
+                                        "value": "photo"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "caption": "Level",
+                            "name": "Level",
+                            "width": "100px",
+                            "add": "info",
+                            "edit": {
+                                "type": "Select",
+                                "options": [
+                                    {
+                                        "caption": "Info",
+                                        "value": "info"
+                                    },
+                                    {
+                                        "caption": "Success",
+                                        "value": "success"
+                                    },
+                                    {
+                                        "caption": "Warning",
+                                        "value": "warning"
+                                    },
+                                    {
+                                        "caption": "Alarm",
+                                        "value": "alarm"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "caption": "Color",
+                            "name": "Color",
+                            "width": "90px",
+                            "add": -1,
+                            "edit": {
+                                "type": "SelectColor",
+                                "allowTransparent": true
+                            }
+                        },
+                        {
+                            "caption": "Icon",
+                            "name": "Icon",
+                            "width": "120px",
+                            "add": "",
+                            "edit": {
+                                "type": "SelectIcon"
+                            }
+                        },
+                        {
+                            "caption": "Size",
+                            "name": "Size",
+                            "width": "100px",
+                            "add": "medium",
+                            "edit": {
+                                "type": "Select",
+                                "options": [
+                                    {
+                                        "caption": "Small",
+                                        "value": "small"
+                                    },
+                                    {
+                                        "caption": "Medium",
+                                        "value": "medium"
+                                    },
+                                    {
+                                        "caption": "Large",
+                                        "value": "large"
+                                    },
+                                    {
+                                        "caption": "Full screen",
+                                        "value": "full"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "caption": "Text size",
+                            "name": "TextSize",
+                            "width": "100px",
+                            "add": "normal",
+                            "edit": {
+                                "type": "Select",
+                                "options": [
+                                    {
+                                        "caption": "Normal",
+                                        "value": "normal"
+                                    },
+                                    {
+                                        "caption": "Large",
+                                        "value": "large"
+                                    },
+                                    {
+                                        "caption": "Very large",
+                                        "value": "xlarge"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "caption": "Duration (s)",
+                            "name": "Duration",
+                            "width": "100px",
+                            "add": 10,
+                            "edit": {
+                                "type": "NumberSpinner",
+                                "minimum": 0,
+                                "maximum": 86400,
+                                "suffix": " s"
+                            }
+                        },
+                        {
+                            "caption": "Overlay",
+                            "name": "Overlay",
+                            "width": "80px",
+                            "add": true,
+                            "edit": {
+                                "type": "CheckBox"
+                            }
+                        },
+                        {
+                            "caption": "Sound",
+                            "name": "Sound",
+                            "width": "auto",
+                            "add": 0,
+                            "edit": {
+                                "type": "SelectMedia"
+                            }
+                        }
                     ]
                 }
             ]
@@ -47,11 +292,51 @@
         {
             "type": "RowLayout",
             "items": [
-                { "type": "Button", "caption": "Send test message", "onClick": "NTF_SendTest($id);" },
-                { "type": "Button", "caption": "Delete all messages", "onClick": "NTF_Clear($id);", "confirm": "Delete all messages?" }
+                {
+                    "type": "Button",
+                    "caption": "Send test message",
+                    "onClick": "NTF_SendTest($id);"
+                },
+                {
+                    "type": "Button",
+                    "caption": "Delete all messages",
+                    "onClick": "NTF_Clear($id);",
+                    "confirm": "Delete all messages?"
+                }
             ]
         },
-        { "type": "Label", "caption": "Example: NTF_Send(12345, 'Water alarm', 'Basement', '{\"template\":\"alarm\"}');" },
-        { "type": "Label", "caption": "Options (JSON, all optional): template (alarm, warning, info, success, doorbell, reminder), icon, image (URL, media ID or data URI), sound (ID of a sound media object), html, level (info, success, warning, alarm), overlay (true/false), duration (seconds, 0 = stays open), size (small, medium, large, full or {\"width\":\"600px\",\"height\":\"70vh\"}), layout (card, banner, hero, toast, photo), id (same id replaces the message)." }
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "type": "Select",
+                    "name": "TestTemplate",
+                    "caption": "Template",
+                    "options": [
+                        {
+                            "caption": "alarm",
+                            "value": "alarm"
+                        }
+                    ]
+                },
+                {
+                    "type": "Button",
+                    "caption": "Send test message with template",
+                    "onClick": "NTF_SendTemplateTest($id, $TestTemplate);"
+                }
+            ]
+        },
+        {
+            "type": "Label",
+            "caption": "Apply changes to the templates first, then test."
+        },
+        {
+            "type": "Label",
+            "caption": "Example: NTF_Send(12345, 'Water alarm', 'Basement', '{\"template\":\"alarm\"}');"
+        },
+        {
+            "type": "Label",
+            "caption": "Options (JSON, all optional): template (alarm, warning, info, success, doorbell, reminder), icon, image (URL, media ID or data URI), sound (ID of a sound media object), html, level (info, success, warning, alarm), overlay (true/false), duration (seconds, 0 = stays open), size (small, medium, large, full or {\"width\":\"600px\",\"height\":\"70vh\"}), layout (card, banner, hero, toast, photo), color (#rrggbb), textSize (normal, large, xlarge), id (same id replaces the message)."
+        }
     ]
 }

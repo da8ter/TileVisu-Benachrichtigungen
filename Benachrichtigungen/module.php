@@ -29,6 +29,8 @@ class NotificationTile extends IPSModuleStrict
         $this->RegisterPropertyInteger('PollInterval', 2);
         $this->RegisterPropertyInteger('MaxMessages', 50);
         $this->RegisterPropertyInteger('MaxAgeDays', 0);
+        // Baukasten: Vorlagen-Tabelle; die eingebauten Vorlagen stehen als Werkszeilen darin.
+        $this->RegisterPropertyString('Templates', (string) json_encode(NotifyStore::DefaultTemplateRows()));
 
         $this->RegisterAttributeString('Messages', '[]');
         $this->RegisterAttributeInteger('Seq', 0);
@@ -74,7 +76,7 @@ class NotificationTile extends IPSModuleStrict
     public function Send(string $Title, string $Text, string $Options): string
     {
         try {
-            $msg = NotifyStore::Normalize($Title, $Text, $Options, $this->Defaults(), bin2hex(random_bytes(6)));
+            $msg = NotifyStore::Normalize($Title, $Text, $Options, $this->Defaults(), bin2hex(random_bytes(6)), $this->Templates());
         } catch (InvalidArgumentException $e) {
             throw new Exception($this->Translate($e->getMessage()));
         }
@@ -117,6 +119,47 @@ class NotificationTile extends IPSModuleStrict
     public function GetNotifications(): string
     {
         return (string) json_encode($this->Load(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    }
+
+    /** Namen aller Vorlagen (eingebaute und eigene), sortiert, als JSON-Liste. */
+    public function GetTemplates(): string
+    {
+        $names = array_keys($this->Templates());
+        sort($names);
+        return (string) json_encode($names);
+    }
+
+    /** Knopf „Testnachricht mit Vorlage" im Formular. */
+    public function SendTemplateTest(string $Template): string
+    {
+        return $this->Send(
+            sprintf($this->Translate('Template "%s"'), $Template),
+            $this->Translate('This is how a notification with this template looks.'),
+            (string) json_encode(['template' => $Template])
+        );
+    }
+
+    /** Formular mit den aktuellen Vorlagen in der Test-Auswahl. */
+    public function GetConfigurationForm(): string
+    {
+        $form = json_decode((string) file_get_contents(__DIR__ . '/form.json'), true);
+        $options = [];
+        foreach (json_decode($this->GetTemplates(), true) as $name) {
+            $options[] = ['caption' => $name, 'value' => $name];
+        }
+        $form['actions'] = array_map(static function (array $el) use ($options): array {
+            if (($el['type'] ?? '') === 'RowLayout') {
+                foreach ($el['items'] as &$item) {
+                    if (($item['name'] ?? '') === 'TestTemplate') {
+                        $item['options'] = $options;
+                        $item['value'] = $options[0]['value'] ?? '';
+                    }
+                }
+                unset($item);
+            }
+            return $el;
+        }, $form['actions']);
+        return (string) json_encode($form);
     }
 
     /** Knopf im Formular. */
@@ -323,6 +366,13 @@ class NotificationTile extends IPSModuleStrict
             'duration' => max(0, $this->ReadPropertyInteger('DefaultDuration')),
             'size'     => in_array($size, NotifyStore::SIZES, true) ? $size : 'medium',
         ];
+    }
+
+    /** Eingebaute Vorlagen, ergänzt und ersetzt durch die Zeilen der Tabelle. */
+    private function Templates(): array
+    {
+        $rows = json_decode($this->ReadPropertyString('Templates'), true);
+        return NotifyStore::TemplatesFromRows(is_array($rows) ? $rows : []);
     }
 
     private function Load(): array

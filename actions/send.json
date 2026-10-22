@@ -3,130 +3,17 @@
     "caption": "Send notification",
     "category": "target",
     "form": [
-        {
-            "type": "ValidationTextBox",
-            "name": "TITLE",
-            "caption": "Title",
-            "width": "100%"
-        },
-        {
-            "type": "ValidationTextBox",
-            "name": "TEXT",
-            "caption": "Text",
-            "width": "100%",
-            "multiline": true
-        },
-        {
-            "type": "Select",
-            "name": "TEMPLATE",
-            "caption": "Template (sets level, icon, size, duration and look)",
-            "value": "",
-            "options": [
-                {
-                    "caption": "None",
-                    "value": ""
-                },
-                {
-                    "caption": "Alarm",
-                    "value": "alarm"
-                },
-                {
-                    "caption": "Warning",
-                    "value": "warning"
-                },
-                {
-                    "caption": "Info (small, top)",
-                    "value": "info"
-                },
-                {
-                    "caption": "Done (small, top)",
-                    "value": "success"
-                },
-                {
-                    "caption": "Doorbell (with image)",
-                    "value": "doorbell"
-                },
-                {
-                    "caption": "Reminder",
-                    "value": "reminder"
-                }
-            ]
-        },
-        {
-            "type": "Select",
-            "name": "LEVEL",
-            "caption": "Level (without template)",
-            "value": "info",
-            "options": [
-                {
-                    "caption": "Info",
-                    "value": "info"
-                },
-                {
-                    "caption": "Success",
-                    "value": "success"
-                },
-                {
-                    "caption": "Warning",
-                    "value": "warning"
-                },
-                {
-                    "caption": "Alarm",
-                    "value": "alarm"
-                }
-            ]
-        },
-        {
-            "type": "SelectIcon",
-            "name": "ICON",
-            "caption": "Icon (empty = icon of the level)",
-            "value": ""
-        },
-        {
-            "type": "SelectMedia",
-            "name": "SOUND",
-            "caption": "Sound (optional, sound media object)",
-            "value": 0
-        },
-        {
-            "type": "CheckBox",
-            "name": "OVERLAY",
-            "caption": "Show as overlay (without template)",
-            "value": true
-        },
-        {
-            "type": "NumberSpinner",
-            "name": "DURATION",
-            "caption": "Close after (0 = stays open) (without template)",
-            "suffix": " s",
-            "minimum": 0,
-            "maximum": 86400,
-            "value": 10
-        },
-        {
-            "type": "Select",
-            "name": "SIZE",
-            "caption": "Size (without template)",
-            "value": "medium",
-            "options": [
-                {
-                    "caption": "Small",
-                    "value": "small"
-                },
-                {
-                    "caption": "Medium",
-                    "value": "medium"
-                },
-                {
-                    "caption": "Large",
-                    "value": "large"
-                },
-                {
-                    "caption": "Full screen",
-                    "value": "full"
-                }
-            ]
-        }
+        "$namen = ['alarm', 'doorbell', 'info', 'reminder', 'success', 'warning'];",
+        "if (isset($_IPS['TARGET']) && function_exists('NTF_GetTemplates') && IPS_InstanceExists((int) $_IPS['TARGET'])) {",
+        "    $liste = json_decode(@NTF_GetTemplates((int) $_IPS['TARGET']), true);",
+        "    if (is_array($liste) && $liste !== []) { $namen = $liste; }",
+        "}",
+        "$vorlagen = [['caption' => 'None', 'value' => '']];",
+        "foreach ($namen as $n) { $vorlagen[] = ['caption' => $n, 'value' => $n]; }",
+        "$form = json_decode('[{\"type\": \"ValidationTextBox\", \"name\": \"TITLE\", \"caption\": \"Title\", \"width\": \"100%\"}, {\"type\": \"ValidationTextBox\", \"name\": \"TEXT\", \"caption\": \"Text\", \"width\": \"100%\", \"multiline\": true}, {\"type\": \"Select\", \"name\": \"TEMPLATE\", \"caption\": \"Template (sets level, icon, size, duration and look)\", \"value\": \"\", \"options\": [{\"caption\": \"None\", \"value\": \"\"}, {\"caption\": \"Alarm\", \"value\": \"alarm\"}, {\"caption\": \"Warning\", \"value\": \"warning\"}, {\"caption\": \"Info (small, top)\", \"value\": \"info\"}, {\"caption\": \"Done (small, top)\", \"value\": \"success\"}, {\"caption\": \"Doorbell (with image)\", \"value\": \"doorbell\"}, {\"caption\": \"Reminder\", \"value\": \"reminder\"}]}, {\"type\": \"Select\", \"name\": \"LEVEL\", \"caption\": \"Level (without template)\", \"value\": \"info\", \"options\": [{\"caption\": \"Info\", \"value\": \"info\"}, {\"caption\": \"Success\", \"value\": \"success\"}, {\"caption\": \"Warning\", \"value\": \"warning\"}, {\"caption\": \"Alarm\", \"value\": \"alarm\"}]}, {\"type\": \"SelectIcon\", \"name\": \"ICON\", \"caption\": \"Icon (empty = icon of the level)\", \"value\": \"\"}, {\"type\": \"SelectMedia\", \"name\": \"SOUND\", \"caption\": \"Sound (optional, sound media object)\", \"value\": 0}, {\"type\": \"CheckBox\", \"name\": \"OVERLAY\", \"caption\": \"Show as overlay (without template)\", \"value\": true}, {\"type\": \"NumberSpinner\", \"name\": \"DURATION\", \"caption\": \"Close after (0 = stays open) (without template)\", \"suffix\": \" s\", \"minimum\": 0, \"maximum\": 86400, \"value\": 10}, {\"type\": \"Select\", \"name\": \"SIZE\", \"caption\": \"Size (without template)\", \"value\": \"medium\", \"options\": [{\"caption\": \"Small\", \"value\": \"small\"}, {\"caption\": \"Medium\", \"value\": \"medium\"}, {\"caption\": \"Large\", \"value\": \"large\"}, {\"caption\": \"Full screen\", \"value\": \"full\"}]}]', true);",
+        "foreach ($form as &$f) { if ($f['name'] === 'TEMPLATE') { $f['options'] = $vorlagen; } }",
+        "unset($f);",
+        "return $form;"
     ],
     "action": "$o = $_IPS['TEMPLATE'] !== '' ? array_filter(['template' => $_IPS['TEMPLATE'], 'icon' => (string) $_IPS['ICON'], 'sound' => (int) $_IPS['SOUND']]) : ['level' => $_IPS['LEVEL'], 'icon' => (string) $_IPS['ICON'], 'sound' => (int) $_IPS['SOUND'], 'overlay' => (bool) $_IPS['OVERLAY'], 'duration' => (int) $_IPS['DURATION'], 'size' => $_IPS['SIZE']]; NTF_Send($_IPS['TARGET'], (string) $_IPS['TITLE'], (string) $_IPS['TEXT'], json_encode($o));",
     "restrictions": {

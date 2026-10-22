@@ -15,6 +15,8 @@ final class NotifyStore
     public const SIZES = ['small', 'medium', 'large', 'full'];
     /** Darstellungen des Overlays: Karte, farbiger Banner, Icon mittig, kleine Einblendung, Bild oben. */
     public const LAYOUTS = ['card', 'banner', 'hero', 'toast', 'photo'];
+    /** Schriftgrößen des Overlays (Faktor in overlay.js). */
+    public const TEXT_SIZES = ['normal', 'large', 'xlarge'];
     /**
      * Vorlagen für typische Szenarien: Darstellung plus Vorgaben. Was die Nachricht selbst angibt,
      * gilt vor der Vorlage; die Vorlage gilt vor den Vorgaben aus dem Formular.
@@ -42,16 +44,17 @@ final class NotifyStore
      * Nachricht aus den Angaben eines Skripts. `$defaults`: overlay (bool), duration (int), size (string).
      * `$newId` wird genommen, wenn die Optionen keine eigene `id` mitbringen.
      */
-    public static function Normalize(string $title, string $text, string $options, array $defaults, string $newId): array
+    public static function Normalize(string $title, string $text, string $options, array $defaults, string $newId, ?array $templates = null): array
     {
+        $templates ??= self::TEMPLATES;
         $o = self::Options($options);
         $template = '';
         if (array_key_exists('template', $o) && $o['template'] !== '' && $o['template'] !== null) {
             $template = is_string($o['template']) ? strtolower(trim($o['template'])) : '';
-            if (!isset(self::TEMPLATES[$template])) {
+            if (!isset($templates[$template])) {
                 throw new InvalidArgumentException('Unknown template');
             }
-            $o = array_merge(self::TEMPLATES[$template], $o);
+            $o = array_merge($templates[$template], $o);
         }
         $layout = array_key_exists('layout', $o) ? (is_string($o['layout']) ? strtolower(trim($o['layout'])) : '') : 'card';
         if (!in_array($layout, self::LAYOUTS, true)) {
@@ -83,6 +86,11 @@ final class NotifyStore
         $html = trim($html);
 
         $image = array_key_exists('image', $o) ? self::Image($o['image']) : null;
+        $color = array_key_exists('color', $o) ? self::Color($o['color']) : '';
+        $textSize = array_key_exists('textSize', $o) ? (is_string($o['textSize']) ? strtolower(trim($o['textSize'])) : '') : 'normal';
+        if (!in_array($textSize, self::TEXT_SIZES, true)) {
+            throw new InvalidArgumentException('Invalid text size');
+        }
         $sound = array_key_exists('sound', $o) ? self::Sound($o['sound']) : 0;
 
         if ($title === '' && $text === '' && $html === '' && $image === null) {
@@ -100,6 +108,8 @@ final class NotifyStore
             'level'    => $level,
             'template' => $template,
             'layout'   => $layout,
+            'color'    => $color,
+            'textSize' => $textSize,
             'overlay'  => array_key_exists('overlay', $o) ? self::Bool($o['overlay']) : (bool) ($defaults['overlay'] ?? true),
             'duration' => array_key_exists('duration', $o) ? self::Duration($o['duration']) : self::Duration($defaults['duration'] ?? 0),
             'size'     => array_key_exists('size', $o) ? self::Size($o['size']) : self::Size($defaults['size'] ?? 'medium'),
@@ -208,6 +218,8 @@ final class NotifyStore
             'sound'    => (int) ($m['sound'] ?? 0) > 0 && $hookBase !== '' ? $hookBase . '&k=snd&m=' . rawurlencode($id) . '&v=' . $seq : '',
             'level'    => (string) $m['level'],
             'layout'   => (string) ($m['layout'] ?? 'card'),
+            'color'    => (string) ($m['color'] ?? ''),
+            'textSize' => (string) ($m['textSize'] ?? 'normal'),
             'overlay'  => (bool) $m['overlay'],
             'duration' => (int) $m['duration'],
             'size'     => $m['size'],
@@ -374,6 +386,80 @@ final class NotifyStore
             throw new InvalidArgumentException('Invalid sound');
         }
         return (int) $sound;
+    }
+
+    /**
+     * Zeilen der Vorlagen-Tabelle aus dem Formular (Name, Layout, Level, Color, Icon, Size, TextSize,
+     * Duration, Overlay, Sound) als Vorlagen. Ungültige Zeilen fallen weg; die eingebauten Vorlagen
+     * gelten weiter, eine Zeile gleichen Namens ersetzt sie.
+     */
+    public static function TemplatesFromRows(array $rows): array
+    {
+        $out = self::TEMPLATES;
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $name = strtolower(trim((string) ($row['Name'] ?? '')));
+            if (preg_match('/^[a-z0-9_-]{1,32}$/', $name) !== 1) {
+                continue;
+            }
+            $t = [
+                'layout'   => in_array($row['Layout'] ?? '', self::LAYOUTS, true) ? $row['Layout'] : 'card',
+                'level'    => in_array($row['Level'] ?? '', self::LEVELS, true) ? $row['Level'] : 'info',
+                'size'     => in_array($row['Size'] ?? '', self::SIZES, true) ? $row['Size'] : 'medium',
+                'textSize' => in_array($row['TextSize'] ?? '', self::TEXT_SIZES, true) ? $row['TextSize'] : 'normal',
+                'duration' => max(0, min(self::MAX_DURATION, (int) ($row['Duration'] ?? 0))),
+                'overlay'  => (bool) ($row['Overlay'] ?? true),
+            ];
+            $icon = trim((string) ($row['Icon'] ?? ''));
+            if ($icon !== '') {
+                try {
+                    $t['icon'] = self::Icon($icon);
+                } catch (InvalidArgumentException $e) {
+                    // ungültiges Icon: Icon der Stufe
+                }
+            }
+            $color = (int) ($row['Color'] ?? -1);
+            if ($color >= 0 && $color <= 0xFFFFFF) {
+                $t['color'] = sprintf('#%06x', $color);
+            }
+            $sound = (int) ($row['Sound'] ?? 0);
+            if ($sound >= 10000 && $sound <= 59999) {
+                $t['sound'] = $sound;
+            }
+            $out[$name] = $t;
+        }
+        return $out;
+    }
+
+    /** Die eingebauten Vorlagen als Zeilen der Tabelle (Vorgabe der Eigenschaft). */
+    public static function DefaultTemplateRows(): array
+    {
+        $rows = [];
+        foreach (self::TEMPLATES as $name => $t) {
+            $rows[] = [
+                'Name' => $name, 'Layout' => $t['layout'], 'Level' => $t['level'], 'Color' => -1, 'Icon' => $t['icon'] ?? '',
+                'Size' => $t['size'] ?? 'medium', 'TextSize' => 'normal', 'Duration' => $t['duration'] ?? 0,
+                'Overlay' => $t['overlay'] ?? true, 'Sound' => 0,
+            ];
+        }
+        return $rows;
+    }
+
+    /** Farbe als `#rrggbb`: Ganzzahl (wie SelectColor) oder Hex-Text; -1 und leer = Farbe der Stufe. */
+    private static function Color(mixed $c): string
+    {
+        if ($c === null || $c === '' || $c === -1 || $c === '-1') {
+            return '';
+        }
+        if (is_int($c) && $c >= 0 && $c <= 0xFFFFFF) {
+            return sprintf('#%06x', $c);
+        }
+        if (is_string($c) && preg_match('/^#?([0-9a-fA-F]{6})$/', trim($c), $m) === 1) {
+            return '#' . strtolower($m[1]);
+        }
+        throw new InvalidArgumentException('Invalid color');
     }
 
     private static function Bool(mixed $v): bool

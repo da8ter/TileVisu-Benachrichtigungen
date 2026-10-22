@@ -38,6 +38,12 @@ NTF_Send(12345, 'Es hat geklingelt', 'Haustür', json_encode(['template' => 'doo
 
 Die Darstellung lässt sich auch ohne Vorlage wählen: `layout` = `card` (Vorgabe), `banner`, `hero`, `toast`, `photo`.
 
+### Eigene Vorlagen (Baukasten)
+
+Im Instanzformular unter „Vorlagen“ steht eine Tabelle. Je Zeile gibt es eine Vorlage mit Name, Aussehen, Stufe, Farbe, Icon, Größe, Schriftgröße, Dauer, Overlay und Ton. Die eingebauten Vorlagen stehen darin als Werkszeilen und lassen sich ändern, etwa ein eigener Ton für `alarm`. Neue Zeilen werden eigene Vorlagen, etwa `paket` oder `rauchmelder`. Eine gelöschte eingebaute Vorlage gilt mit Werkseinstellungen weiter.
+
+Unter der Tabelle schickt „Testnachricht mit Vorlage senden“ eine Probe in die Visualisierung. Vorher die Änderungen übernehmen. Die Aktion „Benachrichtigung senden“ bietet alle Vorlagen der gewählten Kachel an.
+
 ## Nachrichten senden
 
 ```php
@@ -65,6 +71,8 @@ NTF_Send(12345, 'Wetter', '', json_encode([
 |---|---|---|
 | `template` | `alarm`, `warning`, `info`, `success`, `doorbell`, `reminder` | – |
 | `layout` | `card`, `banner`, `hero`, `toast`, `photo` | aus der Vorlage, sonst `card` |
+| `color` | eigene Farbe `#rrggbb` (statt der Stufenfarbe) | Farbe der Stufe |
+| `textSize` | `normal`, `large`, `xlarge` | `normal` |
 | `level` | `info`, `success`, `warning`, `alarm` | `info` |
 | `icon` | Font-Awesome-Name, z. B. `bell` oder `fa-light fa-bell` | Icon der Stufe |
 | `image` | `https://…`, ID eines Bild-Medienobjekts oder `data:image/…;base64,…` (bis 768 kB) | – |

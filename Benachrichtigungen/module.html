@@ -78,7 +78,7 @@
   }
   var ziel = hauptfenster() || window;
   // Mindestfassung des Overlay-Codes; eine ältere im Hauptfenster wird durch Nachladen ersetzt.
-  var OVERLAY_VERSION = 7;
+  var OVERLAY_VERSION = 8;
   var warten = [], laedt = false;
   function overlay(cb) {
     var a = ziel.__symconNotify;
@@ -171,7 +171,7 @@
   function zeile(m) {
     var row = document.createElement('div');
     row.className = 'row' + (m.read ? '' : ' unread');
-    var farbeLevel = LEVEL[m.level] || LEVEL.info;
+    var farbeLevel = /^#[0-9a-f]{6}$/i.test(m.color || '') ? m.color : (LEVEL[m.level] || LEVEL.info);
     var ico = document.createElement('div');
     ico.className = 'ico';
     if (m.image) {
