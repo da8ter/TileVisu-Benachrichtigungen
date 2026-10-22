@@ -22,7 +22,7 @@
  */
 (function () {
   'use strict';
-  var VERSION = 3; // 2: Ton (play), 3: Löschen im Overlay
+  var VERSION = 4; // 2: Ton (play), 3: Löschen im Overlay, 4: veraltetes Stylesheet ersetzen
   var w = window, d = document;
   var vorher = w.__symconNotify;
   if (vorher && vorher.version >= VERSION) return;
@@ -94,12 +94,17 @@
     try { return typeof json === 'string' ? JSON.parse(json) : null; } catch (e) { return null; }
   }
 
+  // Ein Stylesheet einer älteren Fassung (Visu-Fenster läuft seit Stunden) wird ersetzt, nicht übernommen.
   function style() {
-    if (d.getElementById('ntf-style')) return;
-    var s = d.createElement('style');
-    s.id = 'ntf-style';
+    var s = d.getElementById('ntf-style');
+    if (s && s.getAttribute('data-v') === String(VERSION)) return;
+    if (!s) {
+      s = d.createElement('style');
+      s.id = 'ntf-style';
+      (d.head || d.documentElement).appendChild(s);
+    }
+    s.setAttribute('data-v', String(VERSION));
     s.textContent = CSS;
-    (d.head || d.documentElement).appendChild(s);
   }
 
   function hex(color, fallback) {
