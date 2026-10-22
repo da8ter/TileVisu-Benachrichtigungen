@@ -14,7 +14,7 @@ final class NotifyStore
     public const LEVELS = ['info', 'success', 'warning', 'alarm'];
     public const SIZES = ['small', 'medium', 'large', 'full'];
     /** Darstellungen des Overlays: Karte, farbiger Banner, Icon mittig, kleine Einblendung, Bild oben. */
-    public const LAYOUTS = ['card', 'banner', 'hero', 'toast', 'photo'];
+    public const LAYOUTS = ['card', 'banner', 'hero', 'toast', 'photo', 'fullscreen'];
     /** Schriftgrößen des Overlays (Faktor in overlay.js). */
     public const TEXT_SIZES = ['normal', 'large', 'xlarge'];
     /**

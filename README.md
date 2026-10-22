@@ -37,7 +37,9 @@ NTF_Send(12345, 'Es hat geklingelt', 'Haustür', json_encode(['template' => 'doo
 | `doorbell` | Türklingel, Besucher | Bild randlos oben (z. B. Kamerabild) | groß, 30 s |
 | `reminder` | Müll, Termine | großes rundes Icon mittig, großer Titel | mittel, bleibt offen |
 
-Die Darstellung lässt sich auch ohne Vorlage wählen: `layout` = `card` (Vorgabe), `banner`, `hero`, `toast`, `photo`.
+Die Darstellung lässt sich auch ohne Vorlage wählen: `layout` = `card` (Vorgabe), `banner`, `hero`, `toast`, `photo`, `fullscreen`.
+
+`fullscreen` füllt den ganzen Bildschirm in der Farbe der Stufe (oder `color`): großes Icon, sehr großer Titel, große Knöpfe. Ein Klick daneben schließt sie nicht – gedacht für Meldungen, die bewusst bestätigt werden sollen.
 
 ### Eigene Vorlagen (Baukasten)
 
@@ -71,7 +73,7 @@ NTF_Send(12345, 'Wetter', '', json_encode([
 | Option | Werte | Vorgabe |
 |---|---|---|
 | `template` | `alarm`, `warning`, `info`, `success`, `doorbell`, `reminder` | – |
-| `layout` | `card`, `banner`, `hero`, `toast`, `photo` | aus der Vorlage, sonst `card` |
+| `layout` | `card`, `banner`, `hero`, `toast`, `photo`, `fullscreen` | aus der Vorlage, sonst `card` |
 | `color` | eigene Farbe `#rrggbb` (statt der Stufenfarbe) | Farbe der Stufe |
 | `textSize` | `normal`, `large`, `xlarge` | `normal` |
 | `level` | `info`, `success`, `warning`, `alarm` | `info` |

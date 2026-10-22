@@ -22,7 +22,7 @@
  */
 (function () {
   'use strict';
-  var VERSION = 8; // 2: Ton, 3: Löschen, 4: Stylesheet, 5: Mülleimer FA, 6: Darstellungen, 7: leerer Körper, 8: Farbe und Schriftgröße
+  var VERSION = 9; // 2: Ton, 3: Löschen, 4: Stylesheet, 5: Mülleimer FA, 6: Darstellungen, 7: leerer Körper, 8: Farbe/Schrift, 9: Fullscreen
   var w = window, d = document;
   var vorher = w.__symconNotify;
   if (vorher && vorher.version >= VERSION) return;
@@ -103,9 +103,26 @@
     '.ntf-l-toast .ntf-head{padding:14px 10px 14px 14px}',
     '.ntf-l-toast .ntf-title{font-size:calc(16px * var(--s))}',
     '.ntf-l-toast .ntf-sub{font-size:calc(14px * var(--s));opacity:.8;margin-top:2px}',
-    '.ntf-l-toast .ntf-foot{display:none}'
+    '.ntf-l-toast .ntf-foot{display:none}',
+    // Fullscreen: ganzer Bildschirm in der Stufenfarbe, Inhalt mittig, große Bedienelemente
+    '.ntf-fs-layer{-webkit-backdrop-filter:none;backdrop-filter:none}',
+    '.ntf-l-fullscreen{width:100vw;height:100vh;max-width:none;max-height:none;border-radius:0;box-shadow:none;justify-content:center;',
+    'padding:max(24px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom))}',
+    '.ntf-l-fullscreen .ntf-head{flex-direction:column;text-align:center;gap:26px;padding:0 24px;flex:0 0 auto}',
+    '.ntf-l-fullscreen .ntf-htext{flex:0 0 auto;max-width:1100px}',
+    '.ntf-l-fullscreen .ntf-icon{flex:0 0 auto;width:160px;height:160px;border-radius:50%}',
+    '.ntf-l-fullscreen .ntf-icon svg{width:88px;height:88px}',
+    '.ntf-l-fullscreen .ntf-title{font-size:calc(56px * var(--s));font-weight:800;line-height:1.05}',
+    '.ntf-l-fullscreen .ntf-sub{font-size:calc(28px * var(--s));font-weight:600;opacity:.95;margin-top:16px}',
+    '.ntf-l-fullscreen .ntf-x{position:absolute;top:max(14px,env(safe-area-inset-top));right:18px;font-size:36px;opacity:.9}',
+    '.ntf-l-fullscreen .ntf-body{flex:0 1 auto;width:min(900px,100%);align-self:center;margin-top:24px}',
+    '.ntf-l-fullscreen .ntf-foot{justify-content:center;padding-top:32px;flex:0 0 auto}',
+    '.ntf-l-fullscreen .ntf-more{flex:0 0 auto;opacity:.85;font-size:16px}',
+    '.ntf-l-fullscreen .ntf-btn{font-size:20px;padding:15px 38px}',
+    '.ntf-l-fullscreen .ntf-del{width:56px;height:56px}',
+    '.ntf-l-fullscreen .ntf-bar{height:6px}'
   ].join('');
-  var LAYOUTS = ['card', 'banner', 'hero', 'toast', 'photo'];
+  var LAYOUTS = ['card', 'banner', 'hero', 'toast', 'photo', 'fullscreen'];
 
   var queue = [];        // [{owner, msg, theme, labels, icon}]
   var layer = null;      // sichtbares Overlay
@@ -191,10 +208,13 @@
     var level = /^#[0-9a-f]{6}$/i.test(m.color || '') ? m.color : (LEVEL[m.level] || accent);
     var layout = LAYOUTS.indexOf(m.layout) >= 0 ? m.layout : 'card';
     // Text steht bei Banner, Hero und Toast im Kopf, sonst im Körper.
-    var textImKopf = layout === 'banner' || layout === 'hero' || layout === 'toast';
+    var textImKopf = layout === 'banner' || layout === 'hero' || layout === 'toast' || layout === 'fullscreen';
+    var fs = layout === 'fullscreen';
+    // Im Vollbild steht alles weiß auf der Stufenfarbe.
+    if (fs) { card = level; content = '#ffffff'; }
 
     layer = d.createElement('div');
-    layer.className = 'ntf-layer' + (layout === 'toast' ? ' ntf-toast-layer' : '');
+    layer.className = 'ntf-layer' + (layout === 'toast' ? ' ntf-toast-layer' : '') + (fs ? ' ntf-fs-layer' : '');
     if (layout === 'toast') {
       layer.setAttribute('role', 'status');
       layer.setAttribute('aria-live', 'polite');
@@ -208,6 +228,7 @@
     box.style.color = content;
     var size = m.size && m.size.preset ? SIZE[m.size.preset] || SIZE.medium : (m.size || SIZE.medium);
     if (layout === 'toast' && m.size && m.size.preset) size = { width: 'min(440px, 94vw)' };
+    if (fs) size = {};
     if (size.width) box.style.width = size.width;
     if (size.height) { box.style.height = size.height; box.classList.add('ntf-fixed'); }
 
@@ -227,6 +248,9 @@
       head.style.background = level;
       ic.style.color = '#fff';
       ic.style.background = 'rgba(0,0,0,.2)';
+    } else if (fs) {
+      ic.style.color = '#fff';
+      ic.style.background = 'rgba(0,0,0,.18)';
     } else if (layout === 'hero') {
       ic.style.color = '#fff';
       ic.style.background = level;
@@ -291,7 +315,8 @@
     var btn = d.createElement('button');
     btn.className = 'ntf-btn';
     btn.type = 'button';
-    btn.style.background = accent;
+    btn.style.background = fs ? '#fff' : accent;
+    if (fs) btn.style.color = level;
     btn.textContent = queue.length > 1 ? (l.next || 'Next') : (l.close || 'Close');
     btn.addEventListener('click', next);
     foot.appendChild(more);
@@ -301,7 +326,8 @@
       del.type = 'button';
       del.title = l.delete || 'Delete';
       del.setAttribute('aria-label', l.delete || 'Delete');
-      del.style.background = content + '14';
+      del.style.background = fs ? 'rgba(255,255,255,.22)' : content + '14';
+      if (fs) del.style.color = '#fff';
       var trash = svgNode(icons['trash-can'] || TRASH_SVG) || svgNode(TRASH_SVG);
       if (trash) del.appendChild(trash);
       del.addEventListener('click', function () { loeschen(e); });
@@ -313,7 +339,7 @@
     if (m.duration > 0) {
       var bar = d.createElement('div');
       bar.className = 'ntf-bar';
-      bar.style.background = level;
+      bar.style.background = fs ? '#fff' : level;
       bar.style.animationDuration = m.duration + 's';
       bar.addEventListener('animationend', next);
       box.appendChild(bar);
