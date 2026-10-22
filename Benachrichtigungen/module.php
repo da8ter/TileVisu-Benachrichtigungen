@@ -180,6 +180,7 @@ class NotificationTile extends IPSModuleStrict
      *   k=snd&m=<id>             Ton aus Sound-Medienobjekt (mit Range für Safari)
      *   k=overlay.js[&v=]        Overlay-Code für das Hauptfenster
      *   k=poll&since=<seq>       neue Overlay-Nachrichten (nur mit „Auf jeder Seite")
+     *   k=delete&m=<id>  (POST)  Nachricht löschen (Mülleimer im Overlay; die Kachel kann schon entladen sein)
      */
     protected function ProcessHookData(): void
     {
@@ -248,6 +249,20 @@ class NotificationTile extends IPSModuleStrict
                     return;
                 }
                 echo $image['bytes'];
+                return;
+            case 'delete':
+                if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') {
+                    $this->SendHeader('Allow: POST');
+                    $this->SendStatus(405);
+                    return;
+                }
+                $id = isset($_GET['m']) && is_string($_GET['m']) ? $_GET['m'] : '';
+                if (!NotifyStore::ValidId($id)) {
+                    $this->SendStatus(400);
+                    return;
+                }
+                $this->SendHeader('Cache-Control: no-store');
+                $this->SendStatus($this->Delete($id) ? 204 : 404);
                 return;
             case 'snd':
                 $m = $this->HookMessage();

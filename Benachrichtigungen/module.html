@@ -78,7 +78,7 @@
   }
   var ziel = hauptfenster() || window;
   // Mindestfassung des Overlay-Codes; eine ältere im Hauptfenster wird durch Nachladen ersetzt.
-  var OVERLAY_VERSION = 2;
+  var OVERLAY_VERSION = 3;
   var warten = [], laedt = false;
   function overlay(cb) {
     var a = ziel.__symconNotify;
@@ -116,7 +116,8 @@
     } catch (e) { return ''; }
   }
   function nutzlast(m, sofort) {
-    return JSON.stringify({ owner: OWNER, msg: m, theme: thema(), labels: L, icon: iconSvg(iconName(m)), force: !!sofort });
+    return JSON.stringify({ owner: OWNER, msg: m, theme: thema(), labels: L, icon: iconSvg(iconName(m)), force: !!sofort,
+      hook: state.config.hookBase || '' });
   }
   function iconsMelden(api) {
     state.messages.forEach(function (m) { var n = iconName(m), s = iconSvg(n); if (s) api.icon(n, s); });
@@ -129,7 +130,7 @@
     if (state.config.everywhere) {
       overlay(function (api) {
         iconsMelden(api);
-        api.agent(JSON.stringify({ owner: OWNER, pollUrl: state.config.hookBase + '&k=poll', intervalMs: state.config.pollMs,
+        api.agent(JSON.stringify({ owner: OWNER, pollUrl: state.config.hookBase + '&k=poll', hook: state.config.hookBase, intervalMs: state.config.pollMs,
           seenKey: SEEN, theme: thema(), labels: L }));
         api.pollNow(OWNER);
       });

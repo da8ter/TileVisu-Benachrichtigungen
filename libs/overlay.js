@@ -6,9 +6,10 @@
  * Alle Aufrufe bekommen JSON-Text, nie Objekte der Kachel — ein Objekt aus der Kachel hielte deren
  * Dokument im Hauptfenster fest.
  *
- *   show(json)        {owner, msg, theme, labels, icon, force}  Nachricht zeigen (Schlange)
+ *   show(json)        {owner, msg, theme, labels, icon, force, hook}  Nachricht zeigen (Schlange); mit hook
+ *                     (Hook-Basis) gibt es den Mülleimer, der per POST k=delete löscht
  *   closeOwner(owner) Overlays einer Kachel schließen (Modus „nur Seite der Kachel")
- *   agent(json)       {owner, pollUrl, intervalMs, seenKey, theme, labels}  Empfänger für jede Seite
+ *   agent(json)       {owner, pollUrl, hook, intervalMs, seenKey, theme, labels}  Empfänger für jede Seite
  *   pollNow(owner)    Empfänger sofort fragen lassen
  *   icon(name, svg)   SVG eines Icons für den Empfänger merken
  *   play(url)         Ton einer neuen Nachricht ohne Overlay abspielen
@@ -21,7 +22,7 @@
  */
 (function () {
   'use strict';
-  var VERSION = 2; // 2: Ton (play)
+  var VERSION = 3; // 2: Ton (play), 3: Löschen im Overlay
   var w = window, d = document;
   var vorher = w.__symconNotify;
   if (vorher && vorher.version >= VERSION) return;
@@ -36,6 +37,7 @@
     warning: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3.5l9.5 16.5h-19z" stroke-linejoin="round"/><path d="M12 10v4.5M12 17.2v.3" stroke-linecap="round"/></svg>',
     alarm: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 17V11a6 6 0 0112 0v6M4 17h16M10 20h4M12 2.5v2M3.5 6l1.5 1.2M20.5 6l-1.5 1.2" stroke-linecap="round"/></svg>'
   };
+  var TRASH_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16M9.5 6.5V4.5h5v2M6.5 6.5l1 13h9l1-13M10 10.5v6M14 10.5v6"/></svg>';
   var SIZE = {
     small: { width: 'min(360px, 94vw)' },
     medium: { width: 'min(560px, 94vw)' },
@@ -64,6 +66,8 @@
     '.ntf-foot{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:8px 18px 16px}',
     '.ntf-more{flex:1;opacity:.6;font-size:13px}',
     '.ntf-btn{font:inherit;font-weight:700;border:0;border-radius:12px;padding:10px 18px;cursor:pointer;color:#fff}',
+    '.ntf-del{border:0;border-radius:12px;width:42px;height:42px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:inherit}',
+    '.ntf-del svg{width:20px;height:20px}',
     '.ntf-bar{position:absolute;left:0;bottom:0;height:3px;width:100%;transform-origin:left;animation-name:ntf-bar;animation-timing-function:linear;animation-fill-mode:forwards}',
     '.ntf-card:hover .ntf-bar{animation-play-state:paused}',
     '@keyframes ntf-bar{from{transform:scaleX(1)}to{transform:scaleX(0)}}'
@@ -214,7 +218,20 @@
     btn.style.background = accent;
     btn.textContent = queue.length > 1 ? (l.next || 'Next') : (l.close || 'Close');
     btn.addEventListener('click', next);
-    foot.appendChild(more); foot.appendChild(btn);
+    foot.appendChild(more);
+    if (typeof e.hook === 'string' && e.hook.indexOf('/hook/') === 0) {
+      var del = d.createElement('button');
+      del.className = 'ntf-del';
+      del.type = 'button';
+      del.title = l.delete || 'Delete';
+      del.setAttribute('aria-label', l.delete || 'Delete');
+      del.style.background = content + '14';
+      var trash = svgNode(TRASH_SVG);
+      if (trash) del.appendChild(trash);
+      del.addEventListener('click', function () { loeschen(e); });
+      foot.appendChild(del);
+    }
+    foot.appendChild(btn);
     box.appendChild(foot);
 
     if (m.duration > 0) {
@@ -241,6 +258,16 @@
     render();
   }
 
+  // Löschen über den Hook (POST); die Liste der Kachel folgt über den Push des Moduls.
+  function loeschen(e) {
+    try {
+      fetch(e.hook + '&k=delete&m=' + encodeURIComponent(e.msg.id), { method: 'POST', credentials: 'same-origin', cache: 'no-store' })
+        .catch(function () { /* nächster Versuch über die Liste */ });
+    } catch (x) { /* kein fetch */ }
+    queue = queue.filter(function (q) { return !(q.owner === e.owner && q.msg.id === e.msg.id); });
+    render();
+  }
+
   // Höhe des HTML-Inhalts: nur von genau diesem iframe annehmen.
   function onMessage(ev) {
     if (!frame || ev.source !== frame.contentWindow) return;
@@ -253,6 +280,7 @@
     var e = parse(json);
     if (!e || !e.msg || !e.msg.id) return;
     var entry = { owner: e.owner, msg: e.msg, theme: e.theme, labels: e.labels, icon: typeof e.icon === 'string' ? e.icon : '',
+      hook: typeof e.hook === 'string' ? e.hook : '',
       playSound: !e.force && !!e.msg.sound, played: false };
     var idx = -1;
     for (var i = 0; i < queue.length; i++) {
@@ -305,7 +333,7 @@
         var hoechste = aktuell;
         (j.messages || []).forEach(function (m) {
           if (m.seq > aktuell) {
-            if (m.overlay) show(JSON.stringify({ owner: owner, msg: m, theme: a.cfg.theme, labels: a.cfg.labels }));
+            if (m.overlay) show(JSON.stringify({ owner: owner, msg: m, theme: a.cfg.theme, labels: a.cfg.labels, hook: a.cfg.hook || '' }));
             else if (m.sound) play(m.sound);
             hoechste = Math.max(hoechste, m.seq);
           }
