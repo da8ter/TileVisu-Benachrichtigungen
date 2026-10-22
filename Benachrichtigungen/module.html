@@ -24,10 +24,9 @@
   #list::-webkit-scrollbar-track { background: transparent; }
   #list::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--akzent) 70%, transparent); border-radius: 999px; }
   @supports not selector(::-webkit-scrollbar) { #list { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--akzent) 70%, transparent) transparent; } }
-  .row { position: relative; display: flex; align-items: flex-start; gap: 10px; padding: 9px 8px 9px 12px;
+  .row { position: relative; display: flex; align-items: flex-start; gap: 10px; padding: 9px 8px 9px 9px;
          background: var(--surface); border-radius: 12px; cursor: pointer; overflow: hidden; }
   .row:hover { background: var(--border); }
-  .stripe { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
   .ico { flex: 0 0 34px; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center;
          justify-content: center; font-size: 17px; overflow: hidden; }
   .ico img { width: 100%; height: 100%; object-fit: cover; }
@@ -164,9 +163,6 @@
     var row = document.createElement('div');
     row.className = 'row' + (m.read ? '' : ' unread');
     var farbeLevel = LEVEL[m.level] || LEVEL.info;
-    var stripe = document.createElement('div');
-    stripe.className = 'stripe';
-    stripe.style.background = farbeLevel;
     var ico = document.createElement('div');
     ico.className = 'ico';
     if (m.image) {
@@ -205,7 +201,7 @@
     del.textContent = '×';
     del.addEventListener('click', function (ev) { ev.stopPropagation(); requestAction('Delete', m.id); });
     side.appendChild(tm); side.appendChild(del);
-    row.appendChild(stripe); row.appendChild(ico); row.appendChild(main); row.appendChild(side);
+    row.appendChild(ico); row.appendChild(main); row.appendChild(side);
     row.addEventListener('click', function () {
       overlay(function (api) { api.show(nutzlast(m, true)); });
       if (!m.read) requestAction('Read', m.id);
