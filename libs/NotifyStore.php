@@ -21,6 +21,8 @@ final class NotifyStore
     public const MAX_DATA_IMAGE = 786432;
     public const MAX_DURATION = 86400;
     public const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'];
+    /** Gesamtgröße des Speichers (Attribut in der settings.json); älteste Nachrichten fallen zuerst weg. */
+    public const MAX_STORE_BYTES = 2097152;
 
     /**
      * Nachricht aus den Angaben eines Skripts. `$defaults`: overlay (bool), duration (int), size (string).
@@ -101,6 +103,21 @@ final class NotifyStore
             $list = array_values(array_filter($list, static fn(array $m): bool => (int) ($m['time'] ?? 0) >= $limit));
         }
         return $max > 0 ? array_slice($list, 0, $max) : $list;
+    }
+
+    /** Älteste Nachrichten entfernen, bis die Liste kodiert höchstens `$budget` Bytes hat; die neueste bleibt immer. */
+    public static function TrimBytes(array $list, int $budget): array
+    {
+        $total = 0;
+        $out = [];
+        foreach ($list as $i => $m) {
+            $total += strlen((string) json_encode($m, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) + 1;
+            if ($i > 0 && $total > $budget) {
+                break;
+            }
+            $out[] = $m;
+        }
+        return $out;
     }
 
     /** Als gelesen markieren: eine ID oder alle (`null`). Liefert die Liste und ob sich etwas änderte. */
@@ -200,6 +217,18 @@ final class NotifyStore
             return null;
         }
         return ['mime' => $mime, 'bytes' => $bytes];
+    }
+
+    /** Bildtyp aus den ersten Bytes (Medien ohne Dateiendung); leer, wenn unbekannt. */
+    public static function SniffImage(string $bytes): string
+    {
+        return match (true) {
+            str_starts_with($bytes, "\x89PNG\r\n\x1a\n") => 'image/png',
+            str_starts_with($bytes, "\xFF\xD8\xFF") => 'image/jpeg',
+            str_starts_with($bytes, 'GIF87a'), str_starts_with($bytes, 'GIF89a') => 'image/gif',
+            str_starts_with($bytes, 'RIFF') && substr($bytes, 8, 4) === 'WEBP' => 'image/webp',
+            default => '',
+        };
     }
 
     /** Bildtyp aus der Dateiendung eines Medienobjekts; leer, wenn kein unterstütztes Bild. */
