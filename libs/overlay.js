@@ -22,7 +22,7 @@
  */
 (function () {
   'use strict';
-  var VERSION = 4; // 2: Ton (play), 3: Löschen im Overlay, 4: veraltetes Stylesheet ersetzen
+  var VERSION = 5; // 2: Ton (play), 3: Löschen im Overlay, 4: veraltetes Stylesheet ersetzen, 5: Mülleimer aus Font Awesome
   var w = window, d = document;
   var vorher = w.__symconNotify;
   if (vorher && vorher.version >= VERSION) return;
@@ -37,6 +37,7 @@
     warning: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3.5l9.5 16.5h-19z" stroke-linejoin="round"/><path d="M12 10v4.5M12 17.2v.3" stroke-linecap="round"/></svg>',
     alarm: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 17V11a6 6 0 0112 0v6M4 17h16M10 20h4M12 2.5v2M3.5 6l1.5 1.2M20.5 6l-1.5 1.2" stroke-linecap="round"/></svg>'
   };
+  // Rückfall, solange keine Kachel das Font-Awesome-Icon „trash-can" geliefert hat (icon()).
   var TRASH_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16M9.5 6.5V4.5h5v2M6.5 6.5l1 13h9l1-13M10 10.5v6M14 10.5v6"/></svg>';
   var SIZE = {
     small: { width: 'min(360px, 94vw)' },
@@ -67,7 +68,8 @@
     '.ntf-more{flex:1;opacity:.6;font-size:13px}',
     '.ntf-btn{font:inherit;font-weight:700;border:0;border-radius:12px;padding:10px 18px;cursor:pointer;color:#fff}',
     '.ntf-del{border:0;border-radius:12px;width:42px;height:42px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:inherit}',
-    '.ntf-del svg{width:20px;height:20px}',
+    '.ntf-del svg{width:20px;height:20px;fill:currentColor}',
+    '.ntf-del svg[fill="none"]{fill:none}',
     '.ntf-bar{position:absolute;left:0;bottom:0;height:3px;width:100%;transform-origin:left;animation-name:ntf-bar;animation-timing-function:linear;animation-fill-mode:forwards}',
     '.ntf-card:hover .ntf-bar{animation-play-state:paused}',
     '@keyframes ntf-bar{from{transform:scaleX(1)}to{transform:scaleX(0)}}'
@@ -231,7 +233,7 @@
       del.title = l.delete || 'Delete';
       del.setAttribute('aria-label', l.delete || 'Delete');
       del.style.background = content + '14';
-      var trash = svgNode(TRASH_SVG);
+      var trash = svgNode(icons['trash-can'] || TRASH_SVG) || svgNode(TRASH_SVG);
       if (trash) del.appendChild(trash);
       del.addEventListener('click', function () { loeschen(e); });
       foot.appendChild(del);

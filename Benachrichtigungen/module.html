@@ -78,11 +78,11 @@
   }
   var ziel = hauptfenster() || window;
   // Mindestfassung des Overlay-Codes; eine ältere im Hauptfenster wird durch Nachladen ersetzt.
-  var OVERLAY_VERSION = 4;
+  var OVERLAY_VERSION = 5;
   var warten = [], laedt = false;
   function overlay(cb) {
     var a = ziel.__symconNotify;
-    if (a && a.version >= OVERLAY_VERSION) { cb(a); return; }
+    if (a && a.version >= OVERLAY_VERSION) { werkzeugIcons(a); cb(a); return; }
     if (!state.config.overlayJs) return;
     warten.push(cb);
     if (laedt) return;
@@ -96,7 +96,7 @@
       laedt = false;
       var api = ziel.__symconNotify, w = warten;
       warten = [];
-      if (api && api.version >= OVERLAY_VERSION) w.forEach(function (f) { f(api); });
+      if (api && api.version >= OVERLAY_VERSION) { werkzeugIcons(api); w.forEach(function (f) { f(api); }); }
     };
     (doc.head || doc.documentElement).appendChild(s);
   }
@@ -118,6 +118,13 @@
   function nutzlast(m, sofort) {
     return JSON.stringify({ owner: OWNER, msg: m, theme: thema(), labels: L, icon: iconSvg(iconName(m)), force: !!sofort,
       hook: state.config.hookBase || '' });
+  }
+  // Icons der Bedienelemente im Overlay (das Hauptfenster hat kein Font Awesome): einmal je Kachel liefern.
+  var werkzeugGeliefert = false;
+  function werkzeugIcons(api) {
+    if (werkzeugGeliefert) return;
+    var svg = iconSvg('trash-can');
+    if (svg) { api.icon('trash-can', svg); werkzeugGeliefert = true; }
   }
   function iconsMelden(api) {
     state.messages.forEach(function (m) { var n = iconName(m), s = iconSvg(n); if (s) api.icon(n, s); });
