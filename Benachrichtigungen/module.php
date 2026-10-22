@@ -180,6 +180,9 @@ class NotificationTile extends IPSModuleStrict
             if ($plan['max'] !== $this->ReadAttributeInteger('NcMaxImported')) {
                 $this->WriteAttributeInteger('NcMaxImported', $plan['max']);
             }
+            // Auch ein leerer erster Abgleich ist der erste: sonst gälte die nächste neue
+            // Benachrichtigung noch als Altbestand und käme ohne Overlay (gesehen 22.10.2026).
+            $this->SetBuffer('NcFirst', '');
             return;
         }
         $first = $this->GetBuffer('NcFirst') === '1';
