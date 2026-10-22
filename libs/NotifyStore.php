@@ -57,6 +57,7 @@ final class NotifyStore
         $html = trim($html);
 
         $image = array_key_exists('image', $o) ? self::Image($o['image']) : null;
+        $sound = array_key_exists('sound', $o) ? self::Sound($o['sound']) : 0;
 
         if ($title === '' && $text === '' && $html === '' && $image === null) {
             throw new InvalidArgumentException('Message is empty');
@@ -68,6 +69,7 @@ final class NotifyStore
             'text'     => $text,
             'icon'     => array_key_exists('icon', $o) ? self::Icon($o['icon']) : '',
             'image'    => $image,
+            'sound'    => $sound,
             'html'     => $html,
             'level'    => $level,
             'overlay'  => array_key_exists('overlay', $o) ? self::Bool($o['overlay']) : (bool) ($defaults['overlay'] ?? true),
@@ -175,6 +177,7 @@ final class NotifyStore
             'icon'     => (string) $m['icon'],
             'image'    => $image,
             'html'     => ($m['html'] ?? '') !== '' && $hookBase !== '' ? $hookBase . '&k=html&m=' . rawurlencode($id) . '&v=' . $seq : '',
+            'sound'    => (int) ($m['sound'] ?? 0) > 0 && $hookBase !== '' ? $hookBase . '&k=snd&m=' . rawurlencode($id) . '&v=' . $seq : '',
             'level'    => (string) $m['level'],
             'overlay'  => (bool) $m['overlay'],
             'duration' => (int) $m['duration'],
@@ -229,6 +232,25 @@ final class NotifyStore
             str_starts_with($bytes, "\xFF\xD8\xFF") => 'image/jpeg',
             str_starts_with($bytes, 'GIF87a'), str_starts_with($bytes, 'GIF89a') => 'image/gif',
             str_starts_with($bytes, 'RIFF') && substr($bytes, 8, 4) === 'WEBP' => 'image/webp',
+            default => '',
+        };
+    }
+
+    /** Tontyp aus Dateiendung oder, ohne passende Endung, aus den ersten Bytes; leer, wenn unbekannt. */
+    public static function AudioMime(string $file, string $bytes): string
+    {
+        $map = ['mp3' => 'audio/mpeg', 'wav' => 'audio/wav', 'ogg' => 'audio/ogg', 'oga' => 'audio/ogg', 'opus' => 'audio/ogg',
+            'm4a' => 'audio/mp4', 'aac' => 'audio/aac', 'webm' => 'audio/webm', 'flac' => 'audio/flac'];
+        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        if (isset($map[$ext])) {
+            return $map[$ext];
+        }
+        return match (true) {
+            str_starts_with($bytes, 'ID3'), strlen($bytes) > 1 && ord($bytes[0]) === 0xFF && (ord($bytes[1]) & 0xE0) === 0xE0 => 'audio/mpeg',
+            str_starts_with($bytes, 'RIFF') && substr($bytes, 8, 4) === 'WAVE' => 'audio/wav',
+            str_starts_with($bytes, 'OggS') => 'audio/ogg',
+            str_starts_with($bytes, 'fLaC') => 'audio/flac',
+            substr($bytes, 4, 4) === 'ftyp' => 'audio/mp4',
             default => '',
         };
     }
@@ -311,6 +333,18 @@ final class NotifyStore
             return ['kind' => 'data', 'value' => $image];
         }
         throw new InvalidArgumentException('Invalid image');
+    }
+
+    /** Ton: ID eines Sound-Medienobjekts; 0 = keiner. */
+    private static function Sound(mixed $sound): int
+    {
+        if ($sound === null || $sound === '' || $sound === 0 || $sound === '0') {
+            return 0;
+        }
+        if (!(is_int($sound) || is_string($sound) && ctype_digit($sound)) || (int) $sound < 10000 || (int) $sound > 59999) {
+            throw new InvalidArgumentException('Invalid sound');
+        }
+        return (int) $sound;
     }
 
     private static function Bool(mixed $v): bool

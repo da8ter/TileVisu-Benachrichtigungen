@@ -3,34 +3,103 @@
     "caption": "Send notification",
     "category": "target",
     "form": [
-        { "type": "ValidationTextBox", "name": "TITLE", "caption": "Title", "width": "100%" },
-        { "type": "ValidationTextBox", "name": "TEXT", "caption": "Text", "width": "100%", "multiline": true },
         {
-            "type": "Select", "name": "LEVEL", "caption": "Level", "value": "info",
+            "type": "ValidationTextBox",
+            "name": "TITLE",
+            "caption": "Title",
+            "width": "100%"
+        },
+        {
+            "type": "ValidationTextBox",
+            "name": "TEXT",
+            "caption": "Text",
+            "width": "100%",
+            "multiline": true
+        },
+        {
+            "type": "Select",
+            "name": "LEVEL",
+            "caption": "Level",
+            "value": "info",
             "options": [
-                { "caption": "Info", "value": "info" },
-                { "caption": "Success", "value": "success" },
-                { "caption": "Warning", "value": "warning" },
-                { "caption": "Alarm", "value": "alarm" }
+                {
+                    "caption": "Info",
+                    "value": "info"
+                },
+                {
+                    "caption": "Success",
+                    "value": "success"
+                },
+                {
+                    "caption": "Warning",
+                    "value": "warning"
+                },
+                {
+                    "caption": "Alarm",
+                    "value": "alarm"
+                }
             ]
         },
-        { "type": "SelectIcon", "name": "ICON", "caption": "Icon (empty = icon of the level)", "value": "" },
-        { "type": "CheckBox", "name": "OVERLAY", "caption": "Show as overlay", "value": true },
-        { "type": "NumberSpinner", "name": "DURATION", "caption": "Close after (0 = stays open)", "suffix": " s", "minimum": 0, "maximum": 86400, "value": 10 },
         {
-            "type": "Select", "name": "SIZE", "caption": "Size", "value": "medium",
+            "type": "SelectIcon",
+            "name": "ICON",
+            "caption": "Icon (empty = icon of the level)",
+            "value": ""
+        },
+        {
+            "type": "SelectMedia",
+            "name": "SOUND",
+            "caption": "Sound (optional, sound media object)",
+            "value": 0
+        },
+        {
+            "type": "CheckBox",
+            "name": "OVERLAY",
+            "caption": "Show as overlay",
+            "value": true
+        },
+        {
+            "type": "NumberSpinner",
+            "name": "DURATION",
+            "caption": "Close after (0 = stays open)",
+            "suffix": " s",
+            "minimum": 0,
+            "maximum": 86400,
+            "value": 10
+        },
+        {
+            "type": "Select",
+            "name": "SIZE",
+            "caption": "Size",
+            "value": "medium",
             "options": [
-                { "caption": "Small", "value": "small" },
-                { "caption": "Medium", "value": "medium" },
-                { "caption": "Large", "value": "large" },
-                { "caption": "Full screen", "value": "full" }
+                {
+                    "caption": "Small",
+                    "value": "small"
+                },
+                {
+                    "caption": "Medium",
+                    "value": "medium"
+                },
+                {
+                    "caption": "Large",
+                    "value": "large"
+                },
+                {
+                    "caption": "Full screen",
+                    "value": "full"
+                }
             ]
         }
     ],
-    "action": "NTF_Send($_IPS['TARGET'], (string) $_IPS['TITLE'], (string) $_IPS['TEXT'], json_encode(['level' => $_IPS['LEVEL'], 'icon' => (string) $_IPS['ICON'], 'overlay' => (bool) $_IPS['OVERLAY'], 'duration' => (int) $_IPS['DURATION'], 'size' => $_IPS['SIZE']]));",
+    "action": "NTF_Send($_IPS['TARGET'], (string) $_IPS['TITLE'], (string) $_IPS['TEXT'], json_encode(['level' => $_IPS['LEVEL'], 'icon' => (string) $_IPS['ICON'], 'sound' => (int) $_IPS['SOUND'], 'overlay' => (bool) $_IPS['OVERLAY'], 'duration' => (int) $_IPS['DURATION'], 'size' => $_IPS['SIZE']]));",
     "restrictions": {
-        "objectType": [1],
-        "moduleID": ["{94165A2C-B472-4394-901B-CF35983E7F95}"]
+        "objectType": [
+            1
+        ],
+        "moduleID": [
+            "{94165A2C-B472-4394-901B-CF35983E7F95}"
+        ]
     },
     "priority": 10,
     "locale": {
@@ -52,7 +121,8 @@
             "Small": "Klein",
             "Medium": "Mittel",
             "Large": "Groß",
-            "Full screen": "Vollbild"
+            "Full screen": "Vollbild",
+            "Sound (optional, sound media object)": "Ton (optional, Sound-Medienobjekt)"
         }
     },
     "format": "Send notification: {TITLE}",

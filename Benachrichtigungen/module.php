@@ -79,9 +79,12 @@ class NotificationTile extends IPSModuleStrict
             throw new Exception($this->Translate($e->getMessage()));
         }
         if (is_array($msg['image']) && $msg['image']['kind'] === 'media') {
-            if ($this->MediaImage((int) $msg['image']['value'], false) === null) {
+            if ($this->MediaObject((int) $msg['image']['value'], 1, false) === null) {
                 throw new Exception($this->Translate('Image media not found'));
             }
+        }
+        if ($msg['sound'] > 0 && $this->MediaObject($msg['sound'], 2, false) === null) {
+            throw new Exception($this->Translate('Sound media not found'));
         }
         $this->Mutate(function (array $list) use ($msg): array {
             $seq = $this->ReadAttributeInteger('Seq') + 1;
@@ -174,6 +177,7 @@ class NotificationTile extends IPSModuleStrict
      * /hook/notify/<ID>?t=<Token>&k=…
      *   k=html&m=<id>[&c=<hex>]  HTML-Körper als Dokument (CSP sandbox)
      *   k=img&m=<id>             Bild aus Medienobjekt oder data-URI
+     *   k=snd&m=<id>             Ton aus Sound-Medienobjekt (mit Range für Safari)
      *   k=overlay.js[&v=]        Overlay-Code für das Hauptfenster
      *   k=poll&since=<seq>       neue Overlay-Nachrichten (nur mit „Auf jeder Seite")
      */
@@ -204,7 +208,7 @@ class NotificationTile extends IPSModuleStrict
                 $base = $this->HookBase();
                 $neu = [];
                 foreach ($this->Load() as $m) {
-                    if ((int) $m['seq'] > $since && $m['overlay']) {
+                    if ((int) $m['seq'] > $since && ($m['overlay'] || (int) ($m['sound'] ?? 0) > 0)) {
                         $neu[] = NotifyStore::Summary($m, $base);
                     }
                 }
@@ -244,6 +248,40 @@ class NotificationTile extends IPSModuleStrict
                     return;
                 }
                 echo $image['bytes'];
+                return;
+            case 'snd':
+                $m = $this->HookMessage();
+                $sound = $m === null ? null : $this->SoundBytes($m);
+                if ($sound === null) {
+                    $this->SendStatus(404);
+                    return;
+                }
+                $etag = '"s' . (int) $m['seq'] . '"';
+                $this->SendHeader('Content-Type: ' . $sound['mime']);
+                $this->SendHeader('Cache-Control: private, max-age=86400');
+                $this->SendHeader('ETag: ' . $etag);
+                $this->SendHeader('Accept-Ranges: bytes');
+                if (trim((string) ($_SERVER['HTTP_IF_NONE_MATCH'] ?? '')) === $etag) {
+                    $this->SendStatus(304);
+                    return;
+                }
+                $bytes = $sound['bytes'];
+                $total = strlen($bytes);
+                // Safari lädt Audio nur mit Teil-Antworten (206).
+                if (preg_match('/^bytes=(\d*)-(\d*)$/', trim((string) ($_SERVER['HTTP_RANGE'] ?? '')), $r) === 1 && ($r[1] !== '' || $r[2] !== '')) {
+                    $start = $r[1] === '' ? max(0, $total - (int) $r[2]) : (int) $r[1];
+                    $end = $r[1] === '' || $r[2] === '' ? $total - 1 : min((int) $r[2], $total - 1);
+                    if ($start > $end || $start >= $total) {
+                        $this->SendHeader('Content-Range: bytes */' . $total);
+                        $this->SendStatus(416);
+                        return;
+                    }
+                    $this->SendStatus(206);
+                    $this->SendHeader('Content-Range: bytes ' . $start . '-' . $end . '/' . $total);
+                    echo substr($bytes, $start, $end - $start + 1);
+                    return;
+                }
+                echo $bytes;
                 return;
             default:
                 $this->SendStatus(404);
@@ -373,7 +411,7 @@ class NotificationTile extends IPSModuleStrict
         if ($img['kind'] === 'data') {
             $parsed = NotifyStore::ParseDataImage((string) $img['value']);
         } elseif ($img['kind'] === 'media') {
-            $media = $this->MediaImage((int) $img['value'], true);
+            $media = $this->MediaObject((int) $img['value'], 1, true);
             $bytes = $media === null ? false : base64_decode($media['content'], true);
             $mime = $media === null ? '' : NotifyStore::MimeForFile($media['file']);
             if ($bytes !== false && $mime === '') {
@@ -387,14 +425,30 @@ class NotificationTile extends IPSModuleStrict
         return $parsed !== null && strlen($parsed['bytes']) <= 1000000 ? $parsed : null;
     }
 
-    /** Bild-Medienobjekt (Typ 1): Datei und, auf Wunsch, Inhalt als Base64; null, wenn es keines ist. */
-    protected function MediaImage(int $id, bool $withContent): ?array
+    /** Ton einer Nachricht als Bytes mit Typ; null ohne Ton, bei fehlendem Medium und über der Hook-Grenze. */
+    private function SoundBytes(array $m): ?array
+    {
+        $id = (int) ($m['sound'] ?? 0);
+        $media = $id > 0 ? $this->MediaObject($id, 2, true) : null;
+        $bytes = $media === null ? false : base64_decode($media['content'], true);
+        if ($bytes === false || $bytes === '' || strlen($bytes) > 1000000) {
+            return null;
+        }
+        $mime = NotifyStore::AudioMime($media['file'], $bytes);
+        return $mime === '' ? null : ['mime' => $mime, 'bytes' => $bytes];
+    }
+
+    /**
+     * Medienobjekt eines Typs (1 = Bild, 2 = Ton): Datei und, auf Wunsch, Inhalt als Base64;
+     * null, wenn es fehlt oder einen anderen Typ hat.
+     */
+    protected function MediaObject(int $id, int $type, bool $withContent): ?array
     {
         if (!IPS_MediaExists($id)) {
             return null;
         }
         $media = IPS_GetMedia($id);
-        if ((int) ($media['MediaType'] ?? -1) !== 1) {
+        if ((int) ($media['MediaType'] ?? -1) !== $type) {
             return null;
         }
         return ['file' => (string) ($media['MediaFile'] ?? ''), 'content' => $withContent ? (string) IPS_GetMediaContent($id) : ''];

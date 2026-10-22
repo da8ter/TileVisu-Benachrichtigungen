@@ -11,13 +11,17 @@
  *   agent(json)       {owner, pollUrl, intervalMs, seenKey, theme, labels}  Empfänger für jede Seite
  *   pollNow(owner)    Empfänger sofort fragen lassen
  *   icon(name, svg)   SVG eines Icons für den Empfänger merken
+ *   play(url)         Ton einer neuen Nachricht ohne Overlay abspielen
+ *
+ * Töne spielen nur bei NEUEN Nachrichten (nicht beim Öffnen aus der Liste) und im Hauptfenster: das hat
+ * nach dem ersten Klick in der Visu die Nutzer-Aktivierung, die Browser für Audio verlangen.
  *
  * HTML-Inhalte laufen in einem iframe mit sandbox="allow-scripts allow-popups allow-forms" (ohne
  * allow-same-origin): eigener, undurchsichtiger Ursprung, kein Zugriff auf die Visu.
  */
 (function () {
   'use strict';
-  var VERSION = 1;
+  var VERSION = 2; // 2: Ton (play)
   var w = window, d = document;
   var vorher = w.__symconNotify;
   if (vorher && vorher.version >= VERSION) return;
@@ -70,6 +74,17 @@
   var frame = null;      // iframe der sichtbaren Nachricht
   var agents = {};       // owner → {cfg, timer}
   var icons = {};        // Icon-Name → SVG (von der Kachel geliefert)
+  var ton = null;        // zuletzt gestarteter Ton
+
+  function play(url) {
+    if (typeof url !== 'string' || url.indexOf('/hook/') !== 0) return;
+    try {
+      if (ton) ton.pause();
+      ton = new w.Audio(url);
+      var p = ton.play();
+      if (p && typeof p.catch === 'function') p.catch(function () { /* Browser verweigert ohne Bedienung */ });
+    } catch (e) { /* kein Audio */ }
+  }
 
   function parse(json) {
     try { return typeof json === 'string' ? JSON.parse(json) : null; } catch (e) { return null; }
@@ -127,6 +142,7 @@
     }
     style();
     var m = e.msg, t = e.theme || {}, l = e.labels || {};
+    if (e.playSound && m.sound && !e.played) { e.played = true; play(m.sound); }
     var card = hex(t.card, '#ffffff'), content = hex(t.content, '#1d1d1f'), accent = hex(t.accent, '#00cdab');
     var level = LEVEL[m.level] || accent;
 
@@ -236,7 +252,8 @@
   function show(json) {
     var e = parse(json);
     if (!e || !e.msg || !e.msg.id) return;
-    var entry = { owner: e.owner, msg: e.msg, theme: e.theme, labels: e.labels, icon: typeof e.icon === 'string' ? e.icon : '' };
+    var entry = { owner: e.owner, msg: e.msg, theme: e.theme, labels: e.labels, icon: typeof e.icon === 'string' ? e.icon : '',
+      playSound: !e.force && !!e.msg.sound, played: false };
     var idx = -1;
     for (var i = 0; i < queue.length; i++) {
       if (queue[i].owner === entry.owner && queue[i].msg.id === entry.msg.id) { idx = i; break; }
@@ -288,7 +305,8 @@
         var hoechste = aktuell;
         (j.messages || []).forEach(function (m) {
           if (m.seq > aktuell) {
-            show(JSON.stringify({ owner: owner, msg: m, theme: a.cfg.theme, labels: a.cfg.labels }));
+            if (m.overlay) show(JSON.stringify({ owner: owner, msg: m, theme: a.cfg.theme, labels: a.cfg.labels }));
+            else if (m.sound) play(m.sound);
             hoechste = Math.max(hoechste, m.seq);
           }
         });
@@ -330,5 +348,5 @@
     w.removeEventListener('message', onMessage);
   }
 
-  w.__symconNotify = { version: VERSION, show: show, closeOwner: closeOwner, agent: agent, stopAgent: stopAgent, pollNow: pollNow, icon: icon, dispose: dispose };
+  w.__symconNotify = { version: VERSION, play: play, show: show, closeOwner: closeOwner, agent: agent, stopAgent: stopAgent, pollNow: pollNow, icon: icon, dispose: dispose };
 })();

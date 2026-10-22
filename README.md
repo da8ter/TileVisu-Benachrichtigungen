@@ -4,7 +4,7 @@ Eine Kachel für die Kachel-Visualisierung, an die Skripte, Module und Ereigniss
 
 ## Funktionen
 
-- **Nachrichten** mit Titel, Text, Icon (Font Awesome, Light), Bild (URL, Medienobjekt oder data-URI) und optional HTML.
+- **Nachrichten** mit Titel, Text, Icon (Font Awesome, Light), Bild (URL, Medienobjekt oder data-URI), Ton (Sound-Medienobjekt) und optional HTML.
 - **Stufen** `info`, `success`, `warning`, `alarm` mit eigener Farbe und eigenem Icon.
 - **Liste** mit den neuesten Nachrichten oben. Ungelesene sind markiert, jede Nachricht lässt sich einzeln oder alle zusammen löschen. Ein Tipp öffnet die Nachricht.
 - **Overlay** bleibt offen oder schließt sich nach einer festen Zeit. Es gibt die Größen klein, mittel, groß und Vollbild oder eine eigene Breite und Höhe. Mehrere Nachrichten stellen sich in eine Schlange.
@@ -31,6 +31,8 @@ NTF_Send(12345, 'Haustür', 'Seit 10 Minuten offen', json_encode([
 
 NTF_Send(12345, 'Kamera', '', json_encode(['image' => 23456, 'size' => 'large'])); // Medienobjekt (Bild)
 
+NTF_Send(12345, 'Klingel', 'Es hat geklingelt', json_encode(['sound' => 34567])); // Medienobjekt (Ton)
+
 NTF_Send(12345, 'Wetter', '', json_encode([
     'html' => '<h3>Heute</h3><p>Sonnig, 21 °C</p>',
     'size' => ['width' => '700px', 'height' => '60vh'],
@@ -42,6 +44,7 @@ NTF_Send(12345, 'Wetter', '', json_encode([
 | `level` | `info`, `success`, `warning`, `alarm` | `info` |
 | `icon` | Font-Awesome-Name, z. B. `bell` oder `fa-light fa-bell` | Icon der Stufe |
 | `image` | `https://…`, ID eines Bild-Medienobjekts oder `data:image/…;base64,…` (bis 768 kB) | – |
+| `sound` | ID eines Sound-Medienobjekts (mp3, wav, ogg, m4a …, bis knapp 1 MB) | – |
 | `html` | HTML, auch mit Skripten (bis 256 kB) | – |
 | `overlay` | `true` / `false` | aus dem Formular |
 | `duration` | Sekunden, `0` = bleibt offen | aus dem Formular |
@@ -59,6 +62,12 @@ Weitere Funktionen: `NTF_Delete($id, $MessageID)`, `NTF_Clear($id)`, `NTF_MarkAl
 
 Das Overlay nutzt den Zugriff einer Kachel auf das Fenster der Visualisierung. Das ist keine zugesicherte Schnittstelle von Symcon. Ändert Symcon das, zeigt die Kachel das Overlay in sich selbst.
 
+## Ton
+
+- Der Ton spielt einmal, wenn die Nachricht neu ankommt: mit ihrem Overlay, oder ohne Overlay allein. Beim späteren Öffnen aus der Liste spielt er nicht noch einmal.
+- Es gelten dieselben Regeln wie fürs Overlay: im Standard nur, solange die Seite mit der Kachel offen ist, mit „auf jeder Seite“ überall.
+- Browser spielen Töne erst, nachdem die Seite einmal bedient wurde, also nach einem Klick oder Tipp. Eine frisch geöffnete Visu, in die noch niemand getippt hat, bleibt stumm.
+
 ## Sicherheit
 
 - Titel und Text werden immer als Text dargestellt, nie als HTML.
@@ -68,7 +77,7 @@ Das Overlay nutzt den Zugriff einer Kachel auf das Fenster der Visualisierung. D
 ## Grenzen
 
 - Gespeichert werden höchstens die eingestellte Anzahl Nachrichten (Vorgabe 50), insgesamt höchstens 2 MB. Die ältesten fallen zuerst weg.
-- Bilder aus Medienobjekten werden bis knapp 1 MB ausgeliefert.
+- Bilder und Töne aus Medienobjekten werden bis knapp 1 MB ausgeliefert.
 
 ## Voraussetzungen
 

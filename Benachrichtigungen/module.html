@@ -77,10 +77,12 @@
     return null;
   }
   var ziel = hauptfenster() || window;
+  // Mindestfassung des Overlay-Codes; eine ältere im Hauptfenster wird durch Nachladen ersetzt.
+  var OVERLAY_VERSION = 2;
   var warten = [], laedt = false;
   function overlay(cb) {
     var a = ziel.__symconNotify;
-    if (a && a.version >= 1) { cb(a); return; }
+    if (a && a.version >= OVERLAY_VERSION) { cb(a); return; }
     if (!state.config.overlayJs) return;
     warten.push(cb);
     if (laedt) return;
@@ -94,7 +96,7 @@
       laedt = false;
       var api = ziel.__symconNotify, w = warten;
       warten = [];
-      if (api) w.forEach(function (f) { f(api); });
+      if (api && api.version >= OVERLAY_VERSION) w.forEach(function (f) { f(api); });
     };
     (doc.head || doc.documentElement).appendChild(s);
   }
@@ -137,11 +139,16 @@
     if (ziel.__symconNotify && ziel.__symconNotify.stopAgent) ziel.__symconNotify.stopAgent(OWNER);
     var gesehen = lsGet(SEEN), jetzt = Date.now() / 1000;
     var neu = state.messages.filter(function (m) {
-      return m.overlay && (gesehen === null || m.seq > gesehen) && (!erster || m.time >= jetzt - 120);
+      return (m.overlay || m.sound) && (gesehen === null || m.seq > gesehen) && (!erster || m.time >= jetzt - 120);
     }).sort(function (a, b) { return a.seq - b.seq; });
     lsSet(SEEN, Math.max(gesehen || 0, state.seq));
     erster = false;
-    if (neu.length) overlay(function (api) { neu.forEach(function (m) { api.show(nutzlast(m, false)); }); });
+    if (neu.length) overlay(function (api) {
+      neu.forEach(function (m) {
+        if (m.overlay) api.show(nutzlast(m, false));
+        else if (api.play) api.play(m.sound); // ohne Overlay: nur der Ton
+      });
+    });
   }
 
   // ── Liste ───────────────────────────────────────────────────────────────────

@@ -52,6 +52,6 @@
             ]
         },
         { "type": "Label", "caption": "Example: NTF_Send(12345, 'Washing machine', 'Done', '{\"level\":\"success\",\"icon\":\"washing-machine\",\"duration\":30}');" },
-        { "type": "Label", "caption": "Options (JSON, all optional): icon, image (URL, media ID or data URI), html, level (info, success, warning, alarm), overlay (true/false), duration (seconds, 0 = stays open), size (small, medium, large, full or {\"width\":\"600px\",\"height\":\"70vh\"}), id (same id replaces the message)." }
+        { "type": "Label", "caption": "Options (JSON, all optional): icon, image (URL, media ID or data URI), sound (ID of a sound media object), html, level (info, success, warning, alarm), overlay (true/false), duration (seconds, 0 = stays open), size (small, medium, large, full or {\"width\":\"600px\",\"height\":\"70vh\"}), id (same id replaces the message)." }
     ]
 }
