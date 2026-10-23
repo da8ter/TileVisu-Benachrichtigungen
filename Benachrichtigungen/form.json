@@ -106,7 +106,7 @@
                 },
                 {
                     "type": "Label",
-                    "caption": "Keywords (bell): comma-separated words. A mirrored visualization notification whose title contains one of them gets this template. With several matches the longest word wins."
+                    "caption": "VISU_PostNotification mapping: comma-separated words. A mirrored visualization notification (VISU_PostNotification) whose title contains one of them gets this template. With several matches the longest word wins."
                 },
                 {
                     "type": "List",
@@ -292,7 +292,7 @@
                             }
                         },
                         {
-                            "caption": "Keywords (bell)",
+                            "caption": "VISU_PostNotification mapping",
                             "name": "Keywords",
                             "width": "auto",
                             "add": "",
