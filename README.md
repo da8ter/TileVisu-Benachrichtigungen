@@ -4,6 +4,11 @@
 
 Eine Kachel für die Kachel-Visualisierung, an die Skripte, Module und Ereignisse Nachrichten schicken. Die Kachel zeigt die Nachrichten als Liste. Neue Nachrichten erscheinen auf Wunsch als Overlay über der ganzen Visualisierung, nicht nur innerhalb der Kachel.
 
+> [!CAUTION]
+> **Das Overlay über der ganzen Visualisierung funktioniert nur im Webbrowser.** In der Symcon-App erscheinen neue Nachrichten nur innerhalb der Kachel.
+>
+> **Die Benachrichtigungs-Kachel muss mindestens einmal in der Visualisierung angezeigt worden sein**, damit Nachrichten als Overlay erscheinen. Ohne den Schalter „Benachrichtigung auf jeder Seite zeigen“ erscheint das Overlay nur, solange die Seite mit der Kachel offen ist. Mit dem Schalter erscheint es auf jeder Seite, sobald die Kachel einmal geladen war – am besten liegt sie deshalb auf der Startseite.
+
 ## Funktionen
 
 - **Nachrichten** mit Titel, Text, Icon (Font Awesome, Light), Bild (URL, Medienobjekt oder data-URI), Ton (Sound-Medienobjekt) und optional HTML.
