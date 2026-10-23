@@ -301,6 +301,35 @@
                             }
                         }
                     ]
+                },
+                {
+                    "type": "Label",
+                    "caption": "Level colors: used when neither the message nor the template sets its own color."
+                },
+                {
+                    "type": "List",
+                    "name": "LevelColors",
+                    "caption": "Level colors",
+                    "rowCount": 4,
+                    "add": false,
+                    "delete": false,
+                    "columns": [
+                        {
+                            "caption": "Level (option level)",
+                            "name": "Level",
+                            "width": "200px",
+                            "add": "info"
+                        },
+                        {
+                            "caption": "Color",
+                            "name": "Color",
+                            "width": "auto",
+                            "add": 0,
+                            "edit": {
+                                "type": "SelectColor"
+                            }
+                        }
+                    ]
                 }
             ]
         },

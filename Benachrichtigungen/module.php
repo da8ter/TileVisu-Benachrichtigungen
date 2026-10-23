@@ -19,6 +19,8 @@ class NotificationTile extends IPSModuleStrict
 {
     private const HOOK = 'notify';
     private const LEVEL_ICONS = ['info' => 'circle-info', 'success' => 'circle-check', 'warning' => 'triangle-exclamation', 'alarm' => 'siren-on'];
+    /** Werksfarben der Stufen (wie in overlay.js und module.html), änderbar in der Tabelle „Farben der Stufen". */
+    private const LEVEL_COLORS = ['info' => 0x3498FA, 'success' => 0x34C759, 'warning' => 0xFF9500, 'alarm' => 0xFF3B30];
     /** Kern-Instanz „Notification Control" (verwaltet die Benachrichtigungen der Kachel-Visu). */
     private const NC_GUID = '{D4B231D6-8141-4B9E-9B32-82DA3AEEAB78}';
     /** Fallback-Abgleich, falls keine Nachricht der Notification Control kommt. */
@@ -43,6 +45,9 @@ class NotificationTile extends IPSModuleStrict
         $this->RegisterAttributeInteger('NcMirrorVisu', 0);
         $this->RegisterAttributeInteger('NcWatched', 0);
         $this->RegisterTimer('VisuSync', 0, 'NTF_SyncVisu($_IPS[\'TARGET\']);');
+        $this->RegisterPropertyString('LevelColors', (string) json_encode(array_map(
+            static fn(string $level, int $color): array => ['Level' => $level, 'Color' => $color],
+            array_keys(self::LEVEL_COLORS), array_values(self::LEVEL_COLORS))));
         // Baukasten: Vorlagen-Tabelle; die eingebauten Vorlagen stehen als Werkszeilen darin.
         $this->RegisterPropertyString('Templates', (string) json_encode(NotifyStore::DefaultTemplateRows()));
 
@@ -405,10 +410,11 @@ class NotificationTile extends IPSModuleStrict
                     return;
                 }
                 $base = $this->HookBase();
+                $farben = $this->LevelColorMap();
                 $neu = [];
                 foreach ($this->Load() as $m) {
                     if ((int) $m['seq'] > $since && ($m['overlay'] || (int) ($m['sound'] ?? 0) > 0)) {
-                        $neu[] = NotifyStore::Summary($m, $base);
+                        $neu[] = self::MitStufenfarbe(NotifyStore::Summary($m, $base), $farben);
                     }
                 }
                 $this->SendHeader('Content-Type: application/json; charset=utf-8');
@@ -625,6 +631,30 @@ class NotificationTile extends IPSModuleStrict
         }
     }
 
+    /** Ohne eigene Farbe gilt die Farbe der Stufe aus der Tabelle „Farben der Stufen" (Werksfarben bleiben im Browser Rückfall). */
+    private static function MitStufenfarbe(array $summary, array $farben): array
+    {
+        if ($summary['color'] === '') {
+            $summary['color'] = $farben[$summary['level']] ?? '';
+        }
+        return $summary;
+    }
+
+    /** Stufe → `#rrggbb` aus der Tabelle; fehlende oder ungültige Zeilen nehmen die Werksfarbe. */
+    private function LevelColorMap(): array
+    {
+        $farben = self::LEVEL_COLORS;
+        $rows = json_decode($this->ReadPropertyString('LevelColors'), true);
+        foreach (is_array($rows) ? $rows : [] as $row) {
+            $level = (string) ($row['Level'] ?? '');
+            $color = (int) ($row['Color'] ?? -1);
+            if (isset($farben[$level]) && $color >= 0 && $color <= 0xFFFFFF) {
+                $farben[$level] = $color;
+            }
+        }
+        return array_map(static fn(int $c): string => sprintf('#%06x', $c), $farben);
+    }
+
     /** Eingebaute Vorlagen, ergänzt und ersetzt durch die Zeilen der Tabelle. */
     private function Templates(): array
     {
@@ -676,11 +706,12 @@ class NotificationTile extends IPSModuleStrict
 
     private function State(): array
     {
+        $farben = $this->LevelColorMap();
         $base = $this->HookBase();
         $list = $this->Load();
         $state = [
             'type'     => 'state',
-            'messages' => array_map(static fn(array $m): array => NotifyStore::Summary($m, $base), $list),
+            'messages' => array_map(static fn(array $m): array => self::MitStufenfarbe(NotifyStore::Summary($m, $base), $farben), $list),
             'unread'   => NotifyStore::Unread($list),
             'seq'      => $this->ReadAttributeInteger('Seq'),
             'config'   => [

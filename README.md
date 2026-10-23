@@ -46,6 +46,8 @@ Die Darstellung lässt sich auch ohne Vorlage wählen: `layout` = `card` (Vorgab
 
 Im Instanzformular unter „Vorlagen“ steht eine Tabelle. Je Zeile gibt es eine Vorlage mit Name, Aussehen, Stufe, Farbe, Icon, Größe, Schriftgröße, Dauer, Overlay und Ton. Die eingebauten Vorlagen stehen darin als Werkszeilen und lassen sich ändern, etwa ein eigener Ton für `alarm`. Neue Zeilen werden eigene Vorlagen, etwa `paket` oder `rauchmelder`. Eine gelöschte eingebaute Vorlage gilt mit Werkseinstellungen weiter.
 
+Unter der Vorlagen-Tabelle legt die Tabelle „Farben der Stufen“ fest, in welcher Farbe `info`, `success`, `warning` und `alarm` erscheinen. Sie gilt, wenn weder die Nachricht noch die Vorlage eine eigene Farbe setzt.
+
 In der Spalte „VISU_PostNotification Mapping“ stehen kommagetrennte Wörter, etwa `Rauch, Feuer`. Enthält der Titel einer übernommenen Symcon-Benachrichtigung eines davon, bekommt sie diese Vorlage, Groß- und Kleinschreibung egal. Passen mehrere Vorlagen, gewinnt das längste Wort. So bekommen auch Meldungen aus fremden Skripten und Modulen das passende Aussehen.
 
 Unter der Tabelle schickt „Testnachricht mit Vorlage senden“ eine Probe in die Visualisierung. Vorher die Änderungen übernehmen. Die Aktion „Benachrichtigung senden“ bietet alle Vorlagen der gewählten Kachel an.
