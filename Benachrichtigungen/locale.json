@@ -12,7 +12,6 @@
             "Medium": "Mittel",
             "Large": "Groß",
             "Full screen": "Vollbild",
-            "Show overlay on every page": "Overlay auf jeder Seite zeigen",
             "Off: the overlay appears only while the page with this tile is open. On: it appears on every page of the browser visualization as soon as the tile was loaded once (for example on the start page). The Symcon app shows the overlay inside the tile only.": "Aus: Das Overlay erscheint nur, solange die Seite mit dieser Kachel offen ist. An: Es erscheint auf jeder Seite der Browser-Visualisierung, sobald die Kachel einmal geladen war (zum Beispiel auf der Startseite). Die Symcon-App zeigt das Overlay nur in der Kachel.",
             "Check interval (every page)": "Abfrage-Intervall (jede Seite)",
             "List": "Liste",
@@ -96,7 +95,8 @@
             "Fullscreen message": "Vollbild-Meldung",
             "Options (JSON, all optional): template (alarm, warning, info, success, doorbell, reminder), icon, image (URL, media ID or data URI), sound (ID of a sound media object), html, level (info, success, warning, alarm), overlay (true/false), duration (seconds, 0 = stays open), size (small, medium, large, full or {\"width\":\"600px\",\"height\":\"70vh\"}), layout (card, banner, hero, toast, photo, fullscreen), color (#rrggbb), textSize (normal, large, xlarge), push (true: also to the bell of the forwarding visualization), id (same id replaces the message).": "Optionen (JSON, alle optional): template (alarm, warning, info, success, doorbell, reminder), icon, image (URL, Medien-ID oder data-URI), sound (ID eines Sound-Medienobjekts), html, level (info, success, warning, alarm), overlay (true/false), duration (Sekunden, 0 = bleibt offen), size (small, medium, large, full oder {\"width\":\"600px\",\"height\":\"70vh\"}), layout (card, banner, hero, toast, photo, fullscreen), color (#rrggbb), textSize (normal, large, xlarge), push (true: auch in die Glocke der Weiterleitungs-Visu), id (gleiche ID ersetzt die Nachricht).",
             "VISU_PostNotification mapping": "VISU_PostNotification Mapping",
-            "VISU_PostNotification mapping: comma-separated words. A mirrored visualization notification (VISU_PostNotification) whose title contains one of them gets this template. With several matches the longest word wins.": "VISU_PostNotification Mapping: kommagetrennte Wörter. Eine gespiegelte Visu-Benachrichtigung (VISU_PostNotification), deren Titel eines davon enthält, bekommt diese Vorlage. Passen mehrere, gewinnt das längste Wort."
+            "VISU_PostNotification mapping: comma-separated words. A mirrored visualization notification (VISU_PostNotification) whose title contains one of them gets this template. With several matches the longest word wins.": "VISU_PostNotification Mapping: kommagetrennte Wörter. Eine gespiegelte Visu-Benachrichtigung (VISU_PostNotification), deren Titel eines davon enthält, bekommt diese Vorlage. Passen mehrere, gewinnt das längste Wort.",
+            "Show notification on every page": "Benachrichtigung auf jeder Seite zeigen"
         }
     }
 }

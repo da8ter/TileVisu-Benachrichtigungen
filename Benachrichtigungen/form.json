@@ -53,7 +53,7 @@
                 {
                     "type": "CheckBox",
                     "name": "OverlayEverywhere",
-                    "caption": "Show overlay on every page"
+                    "caption": "Show notification on every page"
                 },
                 {
                     "type": "Label",
