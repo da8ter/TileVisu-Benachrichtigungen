@@ -106,7 +106,7 @@
                 },
                 {
                     "type": "Label",
-                    "caption": "VISU_PostNotification mapping: comma-separated words. A mirrored visualization notification (VISU_PostNotification) whose title contains one of them gets this template. With several matches the longest word wins."
+                    "caption": "VISU_PostNotification mapping: comma-separated words. A taken-over Symcon notification whose title contains one of them gets this template. With several matches the longest word wins."
                 },
                 {
                     "type": "List",
@@ -306,11 +306,11 @@
         },
         {
             "type": "ExpansionPanel",
-            "caption": "Visualization notifications (bell)",
+            "caption": "Symcon notifications",
             "items": [
                 {
                     "type": "Label",
-                    "caption": "Mirror: the tile also lists the notifications of a tile visualization (bell icon). Read and delete work both ways."
+                    "caption": "Take over: the tile also shows the original Symcon notifications of a tile visualization (sent with VISU_PostNotification). Read and delete work both ways."
                 },
                 {
                     "type": "RowLayout",
@@ -318,7 +318,7 @@
                         {
                             "type": "SelectInstance",
                             "name": "MirrorVisuID",
-                            "caption": "Mirror notifications of",
+                            "caption": "Take over Symcon notifications of",
                             "validModules": [
                                 "{B5B875BB-9B76-45FD-4E67-2607E45B3AC4}"
                             ]
@@ -332,7 +332,7 @@
                 },
                 {
                     "type": "Label",
-                    "caption": "Forward: messages of this tile also go to the bell of a visualization and as push to its devices (option push, or always). Symcon allows 250 push messages per day."
+                    "caption": "Forward: messages of this tile are also sent as Symcon notification to a visualization, with push to its devices (per message with option push, or always). Symcon allows 250 push messages per day."
                 },
                 {
                     "type": "RowLayout",
@@ -340,7 +340,7 @@
                         {
                             "type": "SelectInstance",
                             "name": "ForwardVisuID",
-                            "caption": "Forward to",
+                            "caption": "Send as Symcon notification to",
                             "validModules": [
                                 "{B5B875BB-9B76-45FD-4E67-2607E45B3AC4}"
                             ]
@@ -354,7 +354,7 @@
                 },
                 {
                     "type": "Label",
-                    "caption": "Reading uses functions of the Notification Control that are not part of the official documentation."
+                    "caption": "Taking over Symcon notifications uses functions of the Notification Control that are not part of the official documentation."
                 }
             ]
         }
@@ -407,7 +407,7 @@
         },
         {
             "type": "Label",
-            "caption": "Options (JSON, all optional): template (alarm, warning, info, success, doorbell, reminder), icon, image (URL, media ID or data URI), sound (ID of a sound media object), html, level (info, success, warning, alarm), overlay (true/false), duration (seconds, 0 = stays open), size (small, medium, large, full or {\"width\":\"600px\",\"height\":\"70vh\"}), layout (card, banner, hero, toast, photo, fullscreen), color (#rrggbb), textSize (normal, large, xlarge), push (true: also to the bell of the forwarding visualization), id (same id replaces the message)."
+            "caption": "Options (JSON, all optional): template (alarm, warning, info, success, doorbell, reminder), icon, image (URL, media ID or data URI), sound (ID of a sound media object), html, level (info, success, warning, alarm), overlay (true/false), duration (seconds, 0 = stays open), size (small, medium, large, full or {\"width\":\"600px\",\"height\":\"70vh\"}), layout (card, banner, hero, toast, photo, fullscreen), color (#rrggbb), textSize (normal, large, xlarge), push (true: also as Symcon notification with push), id (same id replaces the message)."
         }
     ]
 }
