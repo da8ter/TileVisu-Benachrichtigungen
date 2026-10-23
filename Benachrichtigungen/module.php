@@ -273,6 +273,13 @@ class NotificationTile extends IPSModuleStrict
         foreach (json_decode($this->GetTemplates(), true) as $name) {
             $options[] = ['caption' => $name, 'value' => $name];
         }
+        // Vorschaubilder der Darstellungen (assets/layouts/*.svg) mit Beschriftung in den Bereich „Vorlagen".
+        foreach ($form['elements'] as &$el) {
+            if (($el['type'] ?? '') === 'ExpansionPanel' && ($el['caption'] ?? '') === 'Templates') {
+                array_splice($el['items'], 1, 0, [$this->LayoutPreviews()]);
+            }
+        }
+        unset($el);
         $form['actions'] = array_map(static function (array $el) use ($options): array {
             if (($el['type'] ?? '') === 'RowLayout') {
                 foreach ($el['items'] as &$item) {
@@ -286,6 +293,24 @@ class NotificationTile extends IPSModuleStrict
             return $el;
         }, $form['actions']);
         return (string) json_encode($form);
+    }
+
+    /** Bildreihe der sechs Darstellungen für das Formular: je Spalte Bild und Beschriftung mit `layout`-Wert. */
+    private function LayoutPreviews(): array
+    {
+        $namen = ['card' => 'Card', 'banner' => 'Banner', 'hero' => 'Big icon', 'toast' => 'Small, top', 'photo' => 'Image on top', 'fullscreen' => 'Fullscreen message'];
+        $spalten = [];
+        foreach ($namen as $layout => $name) {
+            $svg = @file_get_contents(__DIR__ . '/assets/layouts/' . $layout . '.svg');
+            if (!is_string($svg)) {
+                continue;
+            }
+            $spalten[] = ['type' => 'ColumnLayout', 'items' => [
+                ['type' => 'Image', 'image' => 'data:image/svg+xml;base64,' . base64_encode($svg), 'width' => '120px'],
+                ['type' => 'Label', 'caption' => $this->Translate($name) . ' (' . $layout . ')'],
+            ]];
+        }
+        return ['type' => 'RowLayout', 'items' => $spalten];
     }
 
     /** Knopf im Formular. */
