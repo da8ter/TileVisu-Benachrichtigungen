@@ -428,6 +428,10 @@ final class NotifyStore
             if ($sound >= 10000 && $sound <= 59999) {
                 $t['sound'] = $sound;
             }
+            $keywords = self::Keywords((string) ($row['Keywords'] ?? ''));
+            if ($keywords !== []) {
+                $t['keywords'] = $keywords;
+            }
             $out[$name] = $t;
         }
         return $out;
@@ -441,10 +445,44 @@ final class NotifyStore
             $rows[] = [
                 'Name' => $name, 'Layout' => $t['layout'], 'Level' => $t['level'], 'Color' => -1, 'Icon' => $t['icon'] ?? '',
                 'Size' => $t['size'] ?? 'medium', 'TextSize' => 'normal', 'Duration' => $t['duration'] ?? 0,
-                'Overlay' => $t['overlay'] ?? true, 'Sound' => 0,
+                'Overlay' => $t['overlay'] ?? true, 'Sound' => 0, 'Keywords' => '',
             ];
         }
         return $rows;
+    }
+
+    /** Kommagetrennte Stichwörter: getrimmt, klein, ohne Leere und Doppelte. */
+    public static function Keywords(string $text): array
+    {
+        $out = [];
+        foreach (explode(',', $text) as $wort) {
+            $wort = mb_strtolower(trim($wort));
+            if ($wort !== '' && mb_strlen($wort) <= 60 && !in_array($wort, $out, true)) {
+                $out[] = $wort;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Vorlage, deren Stichwort im Titel vorkommt (Groß/Klein egal). Passen mehrere, gewinnt das
+     * längste Stichwort (das genauere); bei Gleichstand die zuerst eingetragene Vorlage. '' = keine.
+     */
+    public static function TemplateForTitle(string $title, array $templates): string
+    {
+        $titel = mb_strtolower($title);
+        $best = '';
+        $bestLen = 0;
+        foreach ($templates as $name => $t) {
+            foreach ((array) ($t['keywords'] ?? []) as $wort) {
+                $len = mb_strlen((string) $wort);
+                if ($len > $bestLen && str_contains($titel, (string) $wort)) {
+                    $best = (string) $name;
+                    $bestLen = $len;
+                }
+            }
+        }
+        return $best;
     }
 
     /** Farbe als `#rrggbb`: Ganzzahl (wie SelectColor) oder Hex-Text; -1 und leer = Farbe der Stufe. */

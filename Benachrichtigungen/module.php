@@ -207,10 +207,17 @@ class NotificationTile extends IPSModuleStrict
             }
             $jetzt = time();
             foreach ($plan['imports'] as $n) {
-                $map = VisuSync::MapIcon((string) ($n['Icon'] ?? ''));
-                $options = ['level' => $map['level'], 'overlay' => $overlay && !$first && (int) ($n['SentTime'] ?? 0) >= $jetzt - 120];
-                if ($map['icon'] !== '') {
-                    $options['icon'] = $map['icon'];
+                $neu = $overlay && !$first && (int) ($n['SentTime'] ?? 0) >= $jetzt - 120;
+                // Stichwort einer Vorlage im Titel: die ganze Vorlage gilt (Aussehen, Stufe, Icon, Farbe, Ton …).
+                $vorlage = NotifyStore::TemplateForTitle((string) ($n['Title'] ?? ''), $templates);
+                if ($vorlage !== '') {
+                    $options = ['template' => $vorlage, 'overlay' => $neu && ($templates[$vorlage]['overlay'] ?? true)];
+                } else {
+                    $map = VisuSync::MapIcon((string) ($n['Icon'] ?? ''));
+                    $options = ['level' => $map['level'], 'overlay' => $neu];
+                    if ($map['icon'] !== '') {
+                        $options['icon'] = $map['icon'];
+                    }
                 }
                 try {
                     $msg = NotifyStore::Normalize((string) ($n['Title'] ?? ''), (string) ($n['Body'] ?? ''), (string) json_encode($options),

@@ -105,6 +105,10 @@
                     "caption": "Templates set look, level, color, icon, size, text size, duration and sound. Send with '{\"template\":\"name\"}'. Built-in templates (alarm, warning, info, success, doorbell, reminder) can be changed here; deleted ones keep their factory settings."
                 },
                 {
+                    "type": "Label",
+                    "caption": "Keywords (bell): comma-separated words. A mirrored visualization notification whose title contains one of them gets this template. With several matches the longest word wins."
+                },
+                {
                     "type": "List",
                     "name": "Templates",
                     "caption": "Templates",
@@ -281,10 +285,19 @@
                         {
                             "caption": "Sound",
                             "name": "Sound",
-                            "width": "auto",
+                            "width": "110px",
                             "add": 0,
                             "edit": {
                                 "type": "SelectMedia"
+                            }
+                        },
+                        {
+                            "caption": "Keywords (bell)",
+                            "name": "Keywords",
+                            "width": "auto",
+                            "add": "",
+                            "edit": {
+                                "type": "ValidationTextBox"
                             }
                         }
                     ]
