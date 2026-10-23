@@ -1,5 +1,7 @@
 # Benachrichtigungs-Kachel für Symcon
 
+![Benachrichtigungs-Kachel — Kachel](https://raw.githubusercontent.com/da8ter/images/main/Benachrichtigungs-Kachel%20Kachel.png)
+
 Eine Kachel für die Kachel-Visualisierung, an die Skripte, Module und Ereignisse Nachrichten schicken. Die Kachel zeigt die Nachrichten als Liste. Neue Nachrichten erscheinen auf Wunsch als Overlay über der ganzen Visualisierung, nicht nur innerhalb der Kachel.
 
 ## Funktionen
@@ -14,6 +16,28 @@ Eine Kachel für die Kachel-Visualisierung, an die Skripte, Module und Ereigniss
 - **Aktion** „Benachrichtigung senden“ für Ereignisse und Automationen, ohne Skript.
 - **Symcon-Benachrichtigungen:** die originalen Benachrichtigungen einer Kachel-Visualisierung (`VISU_PostNotification`) übernehmen, gelesen und gelöscht in beide Richtungen, eigene Nachrichten als Symcon-Benachrichtigung mit Push weiterleiten.
 - Variable **Ungelesen** für eigene Auswertungen.
+
+## Visualisierung
+
+Alarm als roter Banner:
+
+![Benachrichtigungs-Kachel — Banner](https://raw.githubusercontent.com/da8ter/images/main/Benachrichtigungs-Kachel%20Banner.png)
+
+Türklingel mit Kamerabild:
+
+![Benachrichtigungs-Kachel — Türklingel](https://raw.githubusercontent.com/da8ter/images/main/Benachrichtigungs-Kachel%20Tuerklingel.png)
+
+Kleine Einblendung oben, die Visualisierung bleibt bedienbar:
+
+![Benachrichtigungs-Kachel — Einblendung](https://raw.githubusercontent.com/da8ter/images/main/Benachrichtigungs-Kachel%20Einblendung.png)
+
+Erinnerung mit großem Icon:
+
+![Benachrichtigungs-Kachel — Erinnerung](https://raw.githubusercontent.com/da8ter/images/main/Benachrichtigungs-Kachel%20Erinnerung.png)
+
+Vollbild-Meldung, die bewusst bestätigt werden muss:
+
+![Benachrichtigungs-Kachel — Vollbild](https://raw.githubusercontent.com/da8ter/images/main/Benachrichtigungs-Kachel%20Vollbild.png)
 
 ## Installation
 
@@ -39,6 +63,8 @@ NTF_Send(12345, 'Es hat geklingelt', 'Haustür', json_encode(['template' => 'doo
 | `reminder` | Müll, Termine | großes rundes Icon mittig, großer Titel | mittel, bleibt offen |
 
 Die Darstellung lässt sich auch ohne Vorlage wählen: `layout` = `card` (Vorgabe), `banner`, `hero`, `toast`, `photo`, `fullscreen`.
+
+![Benachrichtigungs-Kachel — Darstellungen](https://raw.githubusercontent.com/da8ter/images/main/Benachrichtigungs-Kachel%20Darstellungen.png)
 
 `fullscreen` füllt den ganzen Bildschirm in der Farbe der Stufe (oder `color`): großes Icon, sehr großer Titel, große Knöpfe. Ein Klick daneben schließt sie nicht – gedacht für Meldungen, die bewusst bestätigt werden sollen.
 
@@ -131,4 +157,4 @@ Das Overlay nutzt den Zugriff einer Kachel auf das Fenster der Visualisierung. D
 
 ## Voraussetzungen
 
-Symcon 8.2 oder neuer, Kachel-Visualisierung.
+Symcon 9.0 oder neuer, Kachel-Visualisierung.
