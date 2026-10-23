@@ -57,7 +57,7 @@
                 },
                 {
                     "type": "Label",
-                    "caption": "Off: the overlay appears only while the page with this tile is open. On: it appears on every page of the browser visualization as soon as the tile was loaded once (for example on the start page). The Symcon app shows the overlay inside the tile only."
+                    "caption": "Off: new notifications pop up only while the page with this tile is open. On: they pop up on every page of the browser visualization as soon as the tile was loaded once (for example on the start page). The Symcon app shows notifications inside the tile only."
                 },
                 {
                     "type": "NumberSpinner",
