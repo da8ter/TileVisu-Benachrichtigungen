@@ -258,7 +258,11 @@
     var m = neuesteUngelesen();
     miniEl.classList.toggle('hat', state.unread > 0);
     miniEl.querySelector('.zahl').textContent = String(state.unread);
-    miniEl.querySelector('.glocke i').className = 'fa-light ' + (state.unread > 0 ? 'fa-bell-ring' : 'fa-bell');
+    // Font Awesome ersetzt das <i> durch ein <svg>: das Icon deshalb jedes Mal neu setzen statt es zu suchen.
+    var glocke = miniEl.querySelector('.glocke'), gi = document.createElement('i');
+    gi.className = 'fa-light ' + (state.unread > 0 ? 'fa-bell-ring' : 'fa-bell');
+    glocke.textContent = '';
+    glocke.appendChild(gi);
     miniEl.querySelector('.neu').textContent = m ? (m.title || m.text || '') : L.empty;
     miniEl.title = m ? (m.title || '') : L.empty;
   }
