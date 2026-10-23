@@ -306,7 +306,7 @@ class NotificationTile extends IPSModuleStrict
                 continue;
             }
             $spalten[] = ['type' => 'ColumnLayout', 'items' => [
-                ['type' => 'Image', 'image' => 'data:image/svg+xml;base64,' . base64_encode($svg), 'width' => '120px'],
+                ['type' => 'Image', 'image' => 'data:image/svg+xml;base64,' . base64_encode($svg), 'width' => '138px'],
                 ['type' => 'Label', 'caption' => $this->Translate($name) . ' (' . $layout . ')'],
             ]];
         }
