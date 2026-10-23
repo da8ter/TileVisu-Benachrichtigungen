@@ -157,4 +157,4 @@ Das Overlay nutzt den Zugriff einer Kachel auf das Fenster der Visualisierung. D
 
 ## Voraussetzungen
 
-Symcon 9.0 oder neuer, Kachel-Visualisierung.
+Symcon 8.1 oder neuer, Kachel-Visualisierung.
