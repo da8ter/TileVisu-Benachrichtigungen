@@ -17,11 +17,35 @@
   function farbe(name, rueckfall) {
     try { return getComputedStyle(d.documentElement).getPropertyValue(name).trim() || rueckfall; } catch (e) { return rueckfall; }
   }
+  /* Font Awesome wie in der Kachel, aber in einem unsichtbaren Rahmen: Symcons /icons.js legt ein
+     globales FontAwesome an und ersetzt <i>-Elemente; im Fenster der Visu hätte das nichts zu suchen. */
+  var fa = null;
+  function iconSvg(name) {
+    try {
+      var def = fa && fa.findIconDefinition({ prefix: 'fal', iconName: name });
+      return def ? fa.icon(def).html.join('') : '';
+    } catch (e) { return ''; }
+  }
+  function iconsLaden() {
+    var f = d.createElement('iframe');
+    f.setAttribute('aria-hidden', 'true');
+    f.tabIndex = -1;
+    f.style.display = 'none';
+    f.onload = function () {
+      try { fa = f.contentWindow.FontAwesome || null; } catch (e) { fa = null; }
+      var api = w.__symconNotify, svg = iconSvg('trash-can');
+      if (api && svg) api.icon('trash-can', svg);
+    };
+    f.srcdoc = '<!doctype html><script src="/icons.js"><\/script>';
+    (d.body || d.documentElement).appendChild(f);
+  }
+
   function start() {
     var api = w.__symconNotify;
     if (!api || typeof api.agent !== 'function') { laufend[C.owner] = false; return; }
     var dunkel = false;
     try { dunkel = w.matchMedia('(prefers-color-scheme: dark)').matches; } catch (e) { /* hell */ }
+    if (typeof api.iconSource === 'function') api.iconSource(function (name, level) { return iconSvg(name || (C.levelIcons || {})[level] || 'bell'); });
     api.agent(JSON.stringify({
       owner: C.owner, pollUrl: C.hook + '&k=poll', hook: C.hook, intervalMs: C.pollMs, seenKey: C.seenKey, labels: C.labels,
       theme: {
@@ -36,7 +60,7 @@
   s.onload = s.onerror = function (ev) {
     s.onload = s.onerror = null;
     s.remove();
-    if (ev && ev.type === 'load') start(); else laufend[C.owner] = false;
+    if (ev && ev.type === 'load') { start(); iconsLaden(); } else laufend[C.owner] = false;
   };
   (d.head || d.documentElement).appendChild(s);
 })();

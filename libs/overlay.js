@@ -12,6 +12,7 @@
  *   agent(json)       {owner, pollUrl, hook, intervalMs, seenKey, theme, labels}  Empfänger für jede Seite
  *   pollNow(owner)    Empfänger sofort fragen lassen
  *   icon(name, svg)   SVG eines Icons für den Empfänger merken
+ *   iconSource(fn)    fn(name, level) liefert das SVG eines Icons; nur für Code aus DIESEM Fenster (agent.js)
  *   play(url)         Ton einer neuen Nachricht ohne Overlay abspielen
  *
  * Töne spielen nur bei NEUEN Nachrichten (nicht beim Öffnen aus der Liste) und im Hauptfenster: das hat
@@ -22,7 +23,7 @@
  */
 (function () {
   'use strict';
-  var VERSION = 10; // 2: Ton, 3: Löschen, 4: Stylesheet, 5: Mülleimer FA, 6: Darstellungen, 7: leerer Körper, 8: Farbe/Schrift, 9: Fullscreen, 10: klein/in der Kachel
+  var VERSION = 11; // 2: Ton, 3: Löschen, 4: Stylesheet, 5: Mülleimer FA, 6: Darstellungen, 7: leerer Körper, 8: Farbe/Schrift, 9: Fullscreen, 10: klein/in der Kachel, 11: Icon-Quelle
   var w = window, d = document;
   var vorher = w.__symconNotify;
   if (vorher && vorher.version >= VERSION) return;
@@ -174,6 +175,7 @@
   var frame = null;      // iframe der sichtbaren Nachricht
   var agents = {};       // owner → {cfg, timer}
   var icons = {};        // Icon-Name → SVG (von der Kachel geliefert)
+  var quelle = null; // Icon-Quelle des Start-Skripts (agent.js), wenn keine Kachel die Icons liefert
   var ton = null;        // zuletzt gestarteter Ton
 
   function play(url) {
@@ -215,6 +217,9 @@
     if (e.icon) return e.icon;
     var name = e.msg.icon || '';
     if (name && icons[name]) return icons[name];
+    if (quelle) {
+      try { var s = quelle(name, e.msg.level); if (typeof s === 'string' && s.indexOf('<svg') === 0) return s; } catch (x) { /* Rückfall */ }
+    }
     return LEVEL_SVG[e.msg.level] || LEVEL_SVG.info;
   }
 
@@ -517,12 +522,15 @@
     if (typeof name === 'string' && typeof svg === 'string' && /^[a-z0-9-]{1,60}$/.test(name) && svg.indexOf('<svg') === 0) icons[name] = svg;
   }
 
+  function iconSource(fn) { quelle = typeof fn === 'function' ? fn : null; }
+
   function dispose() {
+    quelle = null;
     Object.keys(agents).forEach(stopAgent);
     queue = [];
     render();
     w.removeEventListener('message', onMessage);
   }
 
-  w.__symconNotify = { version: VERSION, play: play, show: show, closeOwner: closeOwner, agent: agent, stopAgent: stopAgent, pollNow: pollNow, icon: icon, dispose: dispose };
+  w.__symconNotify = { version: VERSION, play: play, show: show, closeOwner: closeOwner, agent: agent, stopAgent: stopAgent, pollNow: pollNow, icon: icon, iconSource: iconSource, dispose: dispose };
 })();

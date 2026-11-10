@@ -423,6 +423,7 @@ class NotificationTile extends IPSModuleStrict
                     'overlayJs' => $base . '&k=overlay.js&v=' . $this->OverlayVersion(),
                     'pollMs'    => min(60, max(1, $this->ReadPropertyInteger('PollInterval'))) * 1000,
                     'labels'    => $this->Labels(),
+                    'levelIcons' => self::LEVEL_ICONS,
                 ];
                 $this->SendHeader('Content-Type: application/javascript; charset=utf-8');
                 $this->SendHeader('Cache-Control: no-cache');

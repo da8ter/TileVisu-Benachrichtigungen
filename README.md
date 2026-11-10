@@ -150,7 +150,7 @@ Im Ordner `browser-extension/` liegt eine Erweiterung für Chrome und Edge. Sie 
 3. Im Formular der Kachel steht unten das Feld „Adresse für die Browser-Erweiterung“. Diese Adresse mit der Adresse der Visualisierung davor in die Einrichtung der Erweiterung eintragen, zum Beispiel `http://symcon.local:3777/hook/notify/12345?t=…&k=agent.js`, und den Zugriff auf diese Adresse erlauben.
 4. Die Visualisierung neu laden.
 
-Die Erweiterung wirkt nur in dem Browser, in dem sie installiert ist, nicht in der Symcon-App und nicht auf Handys. Ohne geladene Kachel zeigt das Overlay die einfachen Stufen-Symbole statt der Font-Awesome-Icons. Die Adresse enthält den Zugriffsschlüssel des Hooks und gehört nicht in fremde Hände.
+Die Erweiterung wirkt nur in dem Browser, in dem sie installiert ist, nicht in der Symcon-App und nicht auf Handys. Die Icons kommen wie in der Kachel aus Symcons `/icons.js`. Die Adresse enthält den Zugriffsschlüssel des Hooks und gehört nicht in fremde Hände.
 
 Das Overlay nutzt den Zugriff einer Kachel auf das Fenster der Visualisierung. Das ist keine zugesicherte Schnittstelle von Symcon. Ändert Symcon das, zeigt die Kachel das Overlay in sich selbst.
 
