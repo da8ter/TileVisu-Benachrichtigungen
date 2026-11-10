@@ -17,27 +17,41 @@
   function farbe(name, rueckfall) {
     try { return getComputedStyle(d.documentElement).getPropertyValue(name).trim() || rueckfall; } catch (e) { return rueckfall; }
   }
-  /* Font Awesome wie in der Kachel, aber in einem unsichtbaren Rahmen: Symcons /icons.js legt ein
-     globales FontAwesome an und ersetzt <i>-Elemente; im Fenster der Visu hätte das nichts zu suchen. */
-  var fa = null;
+  /* Icons über den geteilten Platz window.__symconIcons, denselben, den der Baustein symcon-icons-shared
+     der anderen Kacheln benutzt ({v, fa, css, fehler}): Symcons /icons.js läuft einmal im Fenster der
+     Visu, ohne dort Elemente zu ersetzen. Legt ihn dieses Skript an, finden ihn später geladene Kacheln
+     fertig vor und laden icons.js nicht mehr selbst; hat ihn eine Kachel angelegt, wird er mitbenutzt. */
   function iconSvg(name) {
     try {
+      var slot = w.__symconIcons, fa = slot && slot.fa;
       var def = fa && fa.findIconDefinition({ prefix: 'fal', iconName: name });
       return def ? fa.icon(def).html.join('') : '';
     } catch (e) { return ''; }
   }
   function iconsLaden() {
-    var f = d.createElement('iframe');
-    f.setAttribute('aria-hidden', 'true');
-    f.tabIndex = -1;
-    f.style.display = 'none';
-    f.onload = function () {
-      try { fa = f.contentWindow.FontAwesome || null; } catch (e) { fa = null; }
-      var api = w.__symconNotify, svg = iconSvg('trash-can');
-      if (api && svg) api.icon('trash-can', svg);
-    };
-    f.srcdoc = '<!doctype html><script src="/icons.js"><\/script>';
-    (d.body || d.documentElement).appendChild(f);
+    var slot = w.__symconIcons;
+    if (!slot) {
+      if (w.FontAwesome || w.FontAwesomeConfig) return; // die Visu bringt selbst etwas mit: nicht anfassen
+      slot = w.__symconIcons = { v: 1, fa: null, css: '', fehler: false };
+      w.FontAwesomeConfig = { autoReplaceSvg: false, observeMutations: false, autoAddCss: false };
+      var s = d.createElement('script');
+      s.src = '/icons.js';
+      s.onload = function () {
+        s.onload = s.onerror = null;
+        if (w.FontAwesome && w.FontAwesome.dom) { slot.css = w.FontAwesome.dom.css(); slot.fa = w.FontAwesome; } else slot.fehler = true;
+      };
+      s.onerror = function () { s.onload = s.onerror = null; slot.fehler = true; };
+      (d.head || d.documentElement).appendChild(s);
+    }
+    var versuche = 0;
+    (function warten() {
+      if (slot.fa) {
+        var api = w.__symconNotify, svg = iconSvg('trash-can');
+        if (api && svg) api.icon('trash-can', svg);
+      } else if (!slot.fehler && ++versuche <= 100) {
+        w.setTimeout(warten, 100);
+      }
+    })();
   }
 
   function start() {
