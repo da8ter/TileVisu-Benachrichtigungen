@@ -1,7 +1,7 @@
 /* Benachrichtigungs-Kachel: Start des Empfängers ohne geladene Kachel.
  *
  * Der Hook liefert diese Datei als k=agent.js mit eingesetzter Konfiguration. Wer sie im Fenster der
- * Visualisierung lädt (die Browser-Erweiterung aus browser-extension/), bekommt denselben Empfänger,
+ * Visualisierung lädt (die Browser-Erweiterung „Visu-Erweiterung für Symcon“, die die Adresse über k=ext erfährt), bekommt denselben Empfänger,
  * den sonst die Kachel startet: overlay.js laden, dann agent() aufrufen. Lädt später eine Kachel,
  * ersetzt sie die Konfiguration unter demselben owner (mit Farben und Icons aus der Kachel).
  */

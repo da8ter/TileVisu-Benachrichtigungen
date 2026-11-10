@@ -143,11 +143,11 @@ Das Übernehmen der Symcon-Benachrichtigungen nutzt Funktionen der Notification 
 
 ### Ohne geladene Kachel: Browser-Erweiterung
 
-Im Ordner `browser-extension/` liegt eine Erweiterung für Chrome und Edge. Sie startet den Empfänger auf jeder Seite der Visualisierung, auch wenn die Kachel in dieser Sitzung noch nie geladen war. Den Overlay-Code holt sie bei jedem Laden vom Modul, er wird also nur an einer Stelle gepflegt.
+Mit der Browser-Erweiterung [Visu-Erweiterung für Symcon](https://github.com/da8ter/VisuExtensionForSymcon) (Chrome und Edge) läuft der Empfänger auf jeder Seite der Visualisierung, auch wenn die Kachel in dieser Sitzung noch nie geladen war. Den Overlay-Code holt die Erweiterung bei jedem Laden von diesem Modul.
 
 1. In der Kachel „Benachrichtigung auf jeder Seite zeigen“ einschalten.
-2. In Chrome `chrome://extensions` öffnen, den Entwicklermodus einschalten und über „Entpackte Erweiterung laden“ den Ordner `browser-extension` wählen.
-3. Im Formular der Kachel steht unten das Feld „Adresse für die Browser-Erweiterung“. Diese Adresse mit der Adresse der Visualisierung davor in die Einrichtung der Erweiterung eintragen, zum Beispiel `http://symcon.local:3777/hook/notify/12345?t=…&k=agent.js`, und den Zugriff auf diese Adresse erlauben.
+2. Die Erweiterung nach ihrer Anleitung installieren.
+3. Im Formular der Kachel steht unten das Feld „Adresse für die Browser-Erweiterung“. Diese Adresse mit der Adresse der Visualisierung davor in der Erweiterung eintragen, zum Beispiel `http://symcon.local:3777/hook/notify/12345?t=…&k=ext`.
 4. Die Visualisierung neu laden.
 
 Die Erweiterung wirkt nur in dem Browser, in dem sie installiert ist, nicht in der Symcon-App und nicht auf Handys. Die Icons kommen wie in der Kachel aus Symcons `/icons.js`. Die Adresse enthält den Zugriffsschlüssel des Hooks und gehört nicht in fremde Hände.

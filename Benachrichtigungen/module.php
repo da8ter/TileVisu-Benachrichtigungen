@@ -297,11 +297,11 @@ class NotificationTile extends IPSModuleStrict
             }
             return $el;
         }, $form['actions']);
-        // Adresse des Start-Skripts für die Browser-Erweiterung (browser-extension/), ohne Host.
+        // Verbindungsadresse für die Browser-Erweiterung „Visu-Erweiterung für Symcon“ (Hook k=ext), ohne Host.
         $base = $this->HookBase();
         if ($base !== '') {
             $form['actions'][] = ['type' => 'Label', 'caption' => 'Browser extension: shows notifications on every page without a loaded tile. Enter this address in the extension, with the address of your visualization in front. Requires "Show notification on every page".'];
-            $form['actions'][] = ['type' => 'ValidationTextBox', 'name' => 'ExtensionAddress', 'caption' => 'Address for the browser extension', 'width' => '700px', 'value' => $base . '&k=agent.js'];
+            $form['actions'][] = ['type' => 'ValidationTextBox', 'name' => 'ExtensionAddress', 'caption' => 'Address for the browser extension', 'width' => '700px', 'value' => $base . '&k=ext'];
         }
         return (string) json_encode($form);
     }
@@ -388,6 +388,8 @@ class NotificationTile extends IPSModuleStrict
      *   k=img&m=<id>             Bild aus Medienobjekt oder data-URI
      *   k=snd&m=<id>             Ton aus Sound-Medienobjekt (mit Range für Safari)
      *   k=overlay.js[&v=]        Overlay-Code für das Hauptfenster
+     *   k=ext                    Beschreibung für die Browser-Erweiterung (nennt k=agent.js)
+     *   k=agent.js               Start-Skript des Empfängers ohne Kachel (nur mit „Auf jeder Seite")
      *   k=poll&since=<seq>       neue Overlay-Nachrichten (nur mit „Auf jeder Seite")
      *   k=delete&m=<id>  (POST)  Nachricht löschen (Mülleimer im Overlay; die Kachel kann schon entladen sein)
      */
@@ -408,6 +410,20 @@ class NotificationTile extends IPSModuleStrict
                 $this->SendHeader('Content-Type: application/javascript; charset=utf-8');
                 $this->SendHeader('Cache-Control: ' . ($current ? 'private, max-age=31536000, immutable' : 'no-cache'));
                 echo $code;
+                return;
+            case 'ext':
+                // Beschreibung für die Browser-Erweiterung „Visu-Erweiterung für Symcon“ (Vertrag 1): nennt das
+                // Start-Skript. Ohne „Auf jeder Seite“ eine leere Liste mit Hinweis statt 404, damit die
+                // Einrichtung der Erweiterung den Grund zeigen kann.
+                $an = $this->ReadPropertyBoolean('OverlayEverywhere');
+                $this->SendHeader('Content-Type: application/json; charset=utf-8');
+                $this->SendHeader('Cache-Control: no-store');
+                echo json_encode([
+                    'visuExtension' => 1,
+                    'name'          => IPS_GetName($this->InstanceID),
+                    'scripts'       => $an ? [$this->HookBase() . '&k=agent.js'] : [],
+                    'info'          => $an ? '' : $this->Translate('"Show notification on every page" is switched off in the tile.'),
+                ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
                 return;
             case 'agent.js':
                 // Start-Skript des Empfängers ohne Kachel (Browser-Erweiterung); nur mit „Auf jeder Seite".
