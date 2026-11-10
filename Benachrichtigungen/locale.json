@@ -99,7 +99,9 @@
             "Options (JSON, all optional): template (alarm, warning, info, success, doorbell, reminder), icon, image (URL, media ID or data URI), sound (ID of a sound media object), html, level (info, success, warning, alarm), overlay (true/false), duration (seconds, 0 = stays open), size (small, medium, large, full or {\"width\":\"600px\",\"height\":\"70vh\"}), layout (card, banner, hero, toast, photo, fullscreen), color (#rrggbb), textSize (normal, large, xlarge), push (true: also as Symcon notification with push), id (same id replaces the message).": "Optionen (JSON, alle optional): template (alarm, warning, info, success, doorbell, reminder), icon, image (URL, Medien-ID oder data-URI), sound (ID eines Sound-Medienobjekts), html, level (info, success, warning, alarm), overlay (true/false), duration (Sekunden, 0 = bleibt offen), size (small, medium, large, full oder {\"width\":\"600px\",\"height\":\"70vh\"}), layout (card, banner, hero, toast, photo, fullscreen), color (#rrggbb), textSize (normal, large, xlarge), push (true: zusätzlich als Symcon-Benachrichtigung mit Push), id (gleiche ID ersetzt die Nachricht).",
             "Level colors: used when neither the message nor the template sets its own color.": "Farben der Stufen: gelten, wenn weder die Nachricht noch die Vorlage eine eigene Farbe setzt.",
             "Level colors": "Farben der Stufen",
-            "Level (option level)": "Stufe (Option level)"
+            "Level (option level)": "Stufe (Option level)",
+            "Browser extension: shows notifications on every page without a loaded tile. Enter this address in the extension, with the address of your visualization in front. Requires \"Show notification on every page\".": "Browser-Erweiterung: zeigt Benachrichtigungen auf jeder Seite, ohne dass die Kachel geladen sein muss. Diese Adresse in der Erweiterung eintragen, mit der Adresse deiner Visualisierung davor. Benötigt „Benachrichtigung auf jeder Seite zeigen“.",
+            "Address for the browser extension": "Adresse für die Browser-Erweiterung"
         }
     }
 }

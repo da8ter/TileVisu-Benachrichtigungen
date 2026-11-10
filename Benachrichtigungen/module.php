@@ -297,6 +297,12 @@ class NotificationTile extends IPSModuleStrict
             }
             return $el;
         }, $form['actions']);
+        // Adresse des Start-Skripts für die Browser-Erweiterung (browser-extension/), ohne Host.
+        $base = $this->HookBase();
+        if ($base !== '') {
+            $form['actions'][] = ['type' => 'Label', 'caption' => 'Browser extension: shows notifications on every page without a loaded tile. Enter this address in the extension, with the address of your visualization in front. Requires "Show notification on every page".'];
+            $form['actions'][] = ['type' => 'ValidationTextBox', 'name' => 'ExtensionAddress', 'caption' => 'Address for the browser extension', 'width' => '700px', 'value' => $base . '&k=agent.js'];
+        }
         return (string) json_encode($form);
     }
 
@@ -403,8 +409,29 @@ class NotificationTile extends IPSModuleStrict
                 $this->SendHeader('Cache-Control: ' . ($current ? 'private, max-age=31536000, immutable' : 'no-cache'));
                 echo $code;
                 return;
+            case 'agent.js':
+                // Start-Skript des Empfängers ohne Kachel (Browser-Erweiterung); nur mit „Auf jeder Seite".
+                if (!$this->ReadPropertyBoolean('OverlayEverywhere')) {
+                    $this->SendStatus(404);
+                    return;
+                }
+                $base = $this->HookBase();
+                $cfg = [
+                    'owner'     => 'ntf-' . $this->InstanceID,
+                    'seenKey'   => 'ntf.seen.' . $this->InstanceID,
+                    'hook'      => $base,
+                    'overlayJs' => $base . '&k=overlay.js&v=' . $this->OverlayVersion(),
+                    'pollMs'    => min(60, max(1, $this->ReadPropertyInteger('PollInterval'))) * 1000,
+                    'labels'    => $this->Labels(),
+                ];
+                $this->SendHeader('Content-Type: application/javascript; charset=utf-8');
+                $this->SendHeader('Cache-Control: no-cache');
+                echo str_replace('/*NTF_AGENT*/null',
+                    (string) json_encode($cfg, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE),
+                    (string) @file_get_contents(__DIR__ . '/../libs/agent.js'));
+                return;
             case 'poll':
-                $since = isset($_GET['since']) && is_numeric($_GET['since']) ? (int) $_GET['since'] : 0;
+                $since =isset($_GET['since']) && is_numeric($_GET['since']) ? (int) $_GET['since'] : 0;
                 if (!$this->ReadPropertyBoolean('OverlayEverywhere')) {
                     $this->SendStatus(404);
                     return;

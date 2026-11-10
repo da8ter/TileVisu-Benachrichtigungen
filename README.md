@@ -141,6 +141,17 @@ Das Übernehmen der Symcon-Benachrichtigungen nutzt Funktionen der Notification 
 - **Symcon-App:** Die App gibt Kacheln keinen Zugriff auf die übrige Visualisierung. Dort erscheint das Overlay innerhalb der Kachel, hält Kachelname und Ränder frei und verkleinert Icons, Schrift und Knöpfe passend zur Kachelgröße. Das gilt auch für kleine Browserfenster und Handys.
 - Jede Nachricht erscheint in jedem Browser nur einmal als Overlay. Nach dem Neuladen springen nur Nachrichten der letzten zwei Minuten auf.
 
+### Ohne geladene Kachel: Browser-Erweiterung
+
+Im Ordner `browser-extension/` liegt eine Erweiterung für Chrome und Edge. Sie startet den Empfänger auf jeder Seite der Visualisierung, auch wenn die Kachel in dieser Sitzung noch nie geladen war. Den Overlay-Code holt sie bei jedem Laden vom Modul, er wird also nur an einer Stelle gepflegt.
+
+1. In der Kachel „Benachrichtigung auf jeder Seite zeigen“ einschalten.
+2. In Chrome `chrome://extensions` öffnen, den Entwicklermodus einschalten und über „Entpackte Erweiterung laden“ den Ordner `browser-extension` wählen.
+3. Im Formular der Kachel steht unten das Feld „Adresse für die Browser-Erweiterung“. Diese Adresse mit der Adresse der Visualisierung davor in die Einrichtung der Erweiterung eintragen, zum Beispiel `http://symcon.local:3777/hook/notify/12345?t=…&k=agent.js`, und den Zugriff auf diese Adresse erlauben.
+4. Die Visualisierung neu laden.
+
+Die Erweiterung wirkt nur in dem Browser, in dem sie installiert ist, nicht in der Symcon-App und nicht auf Handys. Ohne geladene Kachel zeigt das Overlay die einfachen Stufen-Symbole statt der Font-Awesome-Icons. Die Adresse enthält den Zugriffsschlüssel des Hooks und gehört nicht in fremde Hände.
+
 Das Overlay nutzt den Zugriff einer Kachel auf das Fenster der Visualisierung. Das ist keine zugesicherte Schnittstelle von Symcon. Ändert Symcon das, zeigt die Kachel das Overlay in sich selbst.
 
 ## Ton
