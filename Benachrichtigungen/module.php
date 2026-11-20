@@ -133,7 +133,7 @@ class NotificationTile extends IPSModuleStrict
             $seq = $this->ReadAttributeInteger('Seq') + 1;
             $this->WriteAttributeInteger('Seq', $seq);
             return [NotifyStore::Insert($list, $msg, $seq, time()), null];
-        });
+        }, !empty($msg['overlay']));
         $this->SendDebug('Send', $msg['id'] . ' ' . $msg['title'], 0);
         if ($push) {
             $icon = $msg['icon'] !== '' ? $msg['icon'] : (self::LEVEL_ICONS[$msg['level']] ?? 'bell');
@@ -440,7 +440,7 @@ class NotificationTile extends IPSModuleStrict
     }
 
     /** Sagt den Browsern an der Visu-Erweiterung, dass sich etwas geändert hat: Sie fragen dann sofort statt im Takt. */
-    private function Nudge(): void
+    private function Nudge(bool $wake = false): void
     {
         if (!$this->ReadPropertyBoolean('OverlayEverywhere') || !$this->Docked() || !$this->HasActiveParent()) {
             return;
@@ -451,7 +451,8 @@ class NotificationTile extends IPSModuleStrict
                 'Action'   => 'Send',
                 'Instance' => $this->InstanceID,
                 'Device'   => '',
-                'Data'     => ['seq' => $this->ReadAttributeInteger('Seq')],
+                // wake: eine neue Nachricht mit Overlay holt das Gerät aus dem Bildschirmschoner der Visu-Erweiterung
+                'Data'     => ['seq' => $this->ReadAttributeInteger('Seq')] + ($wake ? ['wake' => true] : []),
             ]));
         } catch (\Throwable $e) {
             $this->SendDebug('Dock', $e->getMessage(), 0);
@@ -772,7 +773,7 @@ class NotificationTile extends IPSModuleStrict
      * Liste ändern unter Semaphor (Skripte können gleichzeitig senden), danach kürzen, speichern,
      * Ungelesen-Zähler setzen und die Kachel benachrichtigen. `$change` liefert [Liste, Ergebnis].
      */
-    private function Mutate(callable $change): mixed
+    private function Mutate(callable $change, bool $wake = false): mixed
     {
         $sem = 'NTF_' . $this->InstanceID;
         if (!IPS_SemaphoreEnter($sem, 5000)) {
@@ -788,7 +789,7 @@ class NotificationTile extends IPSModuleStrict
         }
         $this->SetValue('Unread', NotifyStore::Unread($list));
         $this->Push();
-        $this->Nudge();
+        $this->Nudge($wake);
         return $result;
     }
 

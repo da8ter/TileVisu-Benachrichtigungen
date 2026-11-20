@@ -73,7 +73,11 @@
     // Kanal der Visu-Erweiterung: Das Modul meldet eine Änderung, der Empfänger fragt sofort statt im Takt.
     // Die Laufzeit kommt über die Warteliste; ohne sie bleibt es beim Takt.
     (w.visuExtReady = w.visuExtReady || []).push(function (ext) {
-      ext.on(C.instance, function () { api.pollNow(C.owner); });
+      ext.on(C.instance, function (daten) {
+        // neue Nachricht mit Overlay: erst aus dem Bildschirmschoner holen, sonst läge sie darunter
+        if (daten && daten.wake === true && typeof ext.wake === 'function') ext.wake();
+        api.pollNow(C.owner);
+      });
     });
   }
   var s = d.createElement('script');
