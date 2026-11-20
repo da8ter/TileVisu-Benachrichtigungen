@@ -100,8 +100,8 @@
             "Level colors: used when neither the message nor the template sets its own color.": "Farben der Stufen: gelten, wenn weder die Nachricht noch die Vorlage eine eigene Farbe setzt.",
             "Level colors": "Farben der Stufen",
             "Level (option level)": "Stufe (Option level)",
-            "Browser extension: shows notifications on every page without a loaded tile. Enter this address in the extension, with the address of your visualization in front. Requires \"Show notification on every page\".": "Browser-Erweiterung: zeigt Benachrichtigungen auf jeder Seite, ohne dass die Kachel geladen sein muss. Diese Adresse in der Erweiterung eintragen, mit der Adresse deiner Visualisierung davor. Benötigt „Benachrichtigung auf jeder Seite zeigen“.",
-            "Address for the browser extension": "Adresse für die Browser-Erweiterung",
+            "Browser extension: this tile is docked onto the Visu Extension. Browsers paired there show notifications on every page without a loaded tile. Requires \"Show notification on every page\".": "Browser-Erweiterung: Diese Kachel ist an die Visu-Erweiterung angedockt. Dort gekoppelte Browser zeigen Benachrichtigungen auf jeder Seite, ohne dass die Kachel geladen sein muss. Benötigt „Benachrichtigung auf jeder Seite zeigen“.",
+            "Browser extension: shows notifications on every page without a loaded tile. To use it, connect this tile to an instance \"Visu Extension\" (change gateway) and pair your browser there. Requires \"Show notification on every page\".": "Browser-Erweiterung: zeigt Benachrichtigungen auf jeder Seite, ohne dass die Kachel geladen sein muss. Dazu diese Kachel mit einer Instanz „Visu-Erweiterung“ verbinden (Gateway ändern) und dort den Browser koppeln. Benötigt „Benachrichtigung auf jeder Seite zeigen“.",
             "\"Show notification on every page\" is switched off in the tile.": "„Benachrichtigung auf jeder Seite zeigen“ ist in der Kachel ausgeschaltet."
         }
     }

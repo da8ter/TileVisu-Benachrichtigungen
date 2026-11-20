@@ -143,14 +143,16 @@ Das Übernehmen der Symcon-Benachrichtigungen nutzt Funktionen der Notification 
 
 ### Ohne geladene Kachel: Browser-Erweiterung
 
-Mit der Browser-Erweiterung [Visu-Erweiterung für Symcon](https://github.com/da8ter/VisuExtensionForSymcon) (Chrome und Edge) läuft der Empfänger auf jeder Seite der Visualisierung, auch wenn die Kachel in dieser Sitzung noch nie geladen war. Den Overlay-Code holt die Erweiterung bei jedem Laden von diesem Modul.
+Mit der [Visu-Erweiterung für Symcon](https://github.com/da8ter/VisuExtensionForSymcon) (Browser-Erweiterung für Chrome und Edge mit eigenem Symcon-Modul) läuft der Empfänger auf jeder Seite der Visualisierung, auch wenn die Kachel in dieser Sitzung noch nie geladen war. Neue Nachrichten erscheinen dann sofort, ohne auf das Abfrage-Intervall zu warten.
 
 1. In der Kachel „Benachrichtigung auf jeder Seite zeigen“ einschalten.
-2. Die Erweiterung nach ihrer Anleitung installieren.
-3. Im Formular der Kachel steht unten das Feld „Adresse für die Browser-Erweiterung“. Diese Adresse mit der Adresse der Visualisierung davor in der Erweiterung eintragen, zum Beispiel `http://symcon.local:3777/hook/notify/12345?t=…&k=ext`.
+2. Die Visu-Erweiterung nach ihrer Anleitung installieren: das Symcon-Modul mit einer Instanz „Visu-Erweiterung“ und die Erweiterung im Browser. Den Browser dort einmal koppeln.
+3. Im Formular der Kachel über „Gateway ändern“ die Instanz „Visu-Erweiterung“ wählen. Die Kachel erscheint dann im Formular der Visu-Erweiterung unter „Angedockte Module“.
 4. Die Visualisierung neu laden.
 
-Die Erweiterung wirkt nur in dem Browser, in dem sie installiert ist, nicht in der Symcon-App und nicht auf Handys. Die Icons kommen wie in der Kachel aus Symcons `/icons.js`. Die Adresse enthält den Zugriffsschlüssel des Hooks und gehört nicht in fremde Hände.
+Eine eigene Adresse für die Kachel trägst du in der Erweiterung nicht ein: Der Browser ist mit der Visu-Erweiterung verbunden, die Kachel dockt in Symcon an sie an. Ohne Visu-Erweiterung arbeitet die Kachel wie bisher.
+
+Die Erweiterung wirkt nur in dem Browser, in dem sie installiert ist, nicht in der Symcon-App und nicht auf Handys. Die Icons kommen wie in der Kachel aus Symcons `/icons.js`.
 
 Das Overlay nutzt den Zugriff einer Kachel auf das Fenster der Visualisierung. Das ist keine zugesicherte Schnittstelle von Symcon. Ändert Symcon das, zeigt die Kachel das Overlay in sich selbst.
 

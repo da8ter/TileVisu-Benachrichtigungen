@@ -12,6 +12,7 @@ require_once __DIR__ . '/../libs/VisuSync.php';
  * - Nachrichten liegen im Attribut `Messages` (dauerhaft, begrenzt nach Anzahl, Alter und Bytes).
  * - Die Kachel bekommt nur die öffentliche Sicht (NotifyStore::Summary); HTML-Körper, eingebettete
  *   Bilder und der Overlay-Code kommen über den Hook /hook/notify/<ID> mit Token.
+ *   Für die Browser-Erweiterung dockt die Instanz an das Modul „Visu-Erweiterung“ an (ReceiveData).
  * - HTML läuft im Overlay in einem abgeschotteten iframe (sandbox ohne allow-same-origin); der Hook
  *   setzt zusätzlich CSP sandbox, damit auch ein direkt geöffneter Körper keinen Zugriff auf die Visu hat.
  */
@@ -25,6 +26,10 @@ class NotificationTile extends IPSModuleStrict
     private const NC_GUID = '{D4B231D6-8141-4B9E-9B32-82DA3AEEAB78}';
     /** Fallback-Abgleich, falls keine Nachricht der Notification Control kommt. */
     private const SYNC_MS = 30000;
+    /** Andocken an das Modul „Visu-Erweiterung“ (Datenfluss): diese Instanz → Visu-Erweiterung und zurück. */
+    private const DOCK_TX = '{A5B87602-1C34-4981-89A5-62A0735CB359}';
+    private const DOCK_RX = '{9E7FA1CF-55F3-418B-8C92-FF4BAAC93EFA}';
+    private const VISU_EXTENSION = '{CB9C6C38-9B97-45CA-BFB5-EC7F936AF3FF}';
 
     public function Create(): void
     {
@@ -68,6 +73,8 @@ class NotificationTile extends IPSModuleStrict
     public function ApplyChanges(): void
     {
         parent::ApplyChanges();
+        // Von der Visu-Erweiterung nur Pakete an alle (Target 0) oder an diese Instanz.
+        $this->SetReceiveDataFilter('.*"Target":(0|' . $this->InstanceID . ')[,}].*');
         if (IPS_GetKernelRunlevel() !== KR_READY) {
             $this->RegisterMessage(0, IPS_KERNELSTARTED);
             return;
@@ -297,12 +304,10 @@ class NotificationTile extends IPSModuleStrict
             }
             return $el;
         }, $form['actions']);
-        // Verbindungsadresse für die Browser-Erweiterung „Visu-Erweiterung für Symcon“ (Hook k=ext), ohne Host.
-        $base = $this->HookBase();
-        if ($base !== '') {
-            $form['actions'][] = ['type' => 'Label', 'caption' => 'Browser extension: shows notifications on every page without a loaded tile. Enter this address in the extension, with the address of your visualization in front. Requires "Show notification on every page".'];
-            $form['actions'][] = ['type' => 'ValidationTextBox', 'name' => 'ExtensionAddress', 'caption' => 'Address for the browser extension', 'width' => '700px', 'value' => $base . '&k=ext'];
-        }
+        // Browser-Erweiterung: läuft über die Instanz „Visu-Erweiterung“, an die diese Kachel andockt.
+        $form['actions'][] = ['type' => 'Label', 'caption' => $this->Docked()
+            ? 'Browser extension: this tile is docked onto the Visu Extension. Browsers paired there show notifications on every page without a loaded tile. Requires "Show notification on every page".'
+            : 'Browser extension: shows notifications on every page without a loaded tile. To use it, connect this tile to an instance "Visu Extension" (change gateway) and pair your browser there. Requires "Show notification on every page".'];
         return (string) json_encode($form);
     }
 
@@ -380,6 +385,95 @@ class NotificationTile extends IPSModuleStrict
         return str_replace('/*NTF_INIT*/null', $json, $html);
     }
 
+    // ── Andocken an die Visu-Erweiterung ────────────────────────────────────────
+
+    /** An eine vorhandene Instanz „Visu-Erweiterung“ anschließen; die Kachel arbeitet auch ohne sie. */
+    public function GetCompatibleParents(): string
+    {
+        return (string) json_encode(['type' => 'connect', 'moduleIDs' => [self::VISU_EXTENSION]]);
+    }
+
+    /**
+     * Anfragen der Visu-Erweiterung; die Rückgabe ist die Antwort.
+     *   Describe  → {instance, name, version, active, info}; aktiv nur mit „Auf jeder Seite"
+     *   Script    → Start-Skript des Empfängers ohne Kachel (libs/agent.js mit Konfiguration)
+     */
+    public function ReceiveData(string $JSONString): string
+    {
+        $data = json_decode($JSONString, true);
+        if (!is_array($data) || ($data['DataID'] ?? '') !== self::DOCK_RX || !in_array($data['Target'] ?? null, [0, $this->InstanceID], true)) {
+            return '';
+        }
+        $an = $this->ReadPropertyBoolean('OverlayEverywhere') && $this->HookBase() !== '';
+        switch ((string) ($data['Action'] ?? '')) {
+            case 'Describe':
+                return (string) json_encode([
+                    'instance' => $this->InstanceID,
+                    'name'     => IPS_GetName($this->InstanceID),
+                    'version'  => $this->LibraryVersion(),
+                    'active'   => $an,
+                    'info'     => $an ? '' : $this->Translate('"Show notification on every page" is switched off in the tile.'),
+                ], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+            case 'Script':
+                return $an ? $this->AgentScript() : '';
+        }
+        return '';
+    }
+
+    /** Start-Skript des Empfängers ohne Kachel, mit eingesetzter Konfiguration. */
+    private function AgentScript(): string
+    {
+        $base = $this->HookBase();
+        $cfg = [
+            'instance'  => $this->InstanceID,
+            'owner'     => 'ntf-' . $this->InstanceID,
+            'seenKey'   => 'ntf.seen.' . $this->InstanceID,
+            'hook'      => $base,
+            'overlayJs' => $base . '&k=overlay.js&v=' . $this->OverlayVersion(),
+            'pollMs'    => min(60, max(1, $this->ReadPropertyInteger('PollInterval'))) * 1000,
+            'labels'    => $this->Labels(),
+            'levelIcons' => self::LEVEL_ICONS,
+        ];
+        return str_replace('/*NTF_AGENT*/null',
+            (string) json_encode($cfg, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE),
+            (string) @file_get_contents(__DIR__ . '/../libs/agent.js'));
+    }
+
+    /** Sagt den Browsern an der Visu-Erweiterung, dass sich etwas geändert hat: Sie fragen dann sofort statt im Takt. */
+    private function Nudge(): void
+    {
+        if (!$this->ReadPropertyBoolean('OverlayEverywhere') || !$this->Docked() || !$this->HasActiveParent()) {
+            return;
+        }
+        try {
+            $this->SendDataToParent((string) json_encode([
+                'DataID'   => self::DOCK_TX,
+                'Action'   => 'Send',
+                'Instance' => $this->InstanceID,
+                'Device'   => '',
+                'Data'     => ['seq' => $this->ReadAttributeInteger('Seq')],
+            ]));
+        } catch (\Throwable $e) {
+            $this->SendDebug('Dock', $e->getMessage(), 0);
+        }
+    }
+
+    /** Hängt diese Instanz im Datenfluss an einer übergeordneten Instanz? */
+    protected function Docked(): bool
+    {
+        return (int) (@IPS_GetInstance($this->InstanceID)['ConnectionID'] ?? 0) > 0;
+    }
+
+    protected function LibraryVersion(): string
+    {
+        try {
+            $module = IPS_GetModule(IPS_GetInstance($this->InstanceID)['ModuleInfo']['ModuleID']);
+            return (string) (IPS_GetLibrary($module['LibraryID'])['Version'] ?? '');
+        } catch (\Throwable $e) {
+            return '';
+        }
+    }
+
     // ── Hook ───────────────────────────────────────────────────────────────────
 
     /**
@@ -388,8 +482,6 @@ class NotificationTile extends IPSModuleStrict
      *   k=img&m=<id>             Bild aus Medienobjekt oder data-URI
      *   k=snd&m=<id>             Ton aus Sound-Medienobjekt (mit Range für Safari)
      *   k=overlay.js[&v=]        Overlay-Code für das Hauptfenster
-     *   k=ext                    Beschreibung für die Browser-Erweiterung (nennt k=agent.js)
-     *   k=agent.js               Start-Skript des Empfängers ohne Kachel (nur mit „Auf jeder Seite")
      *   k=poll&since=<seq>       neue Overlay-Nachrichten (nur mit „Auf jeder Seite")
      *   k=delete&m=<id>  (POST)  Nachricht löschen (Mülleimer im Overlay; die Kachel kann schon entladen sein)
      */
@@ -410,42 +502,6 @@ class NotificationTile extends IPSModuleStrict
                 $this->SendHeader('Content-Type: application/javascript; charset=utf-8');
                 $this->SendHeader('Cache-Control: ' . ($current ? 'private, max-age=31536000, immutable' : 'no-cache'));
                 echo $code;
-                return;
-            case 'ext':
-                // Beschreibung für die Browser-Erweiterung „Visu-Erweiterung für Symcon“ (Vertrag 1): nennt das
-                // Start-Skript. Ohne „Auf jeder Seite“ eine leere Liste mit Hinweis statt 404, damit die
-                // Einrichtung der Erweiterung den Grund zeigen kann.
-                $an = $this->ReadPropertyBoolean('OverlayEverywhere');
-                $this->SendHeader('Content-Type: application/json; charset=utf-8');
-                $this->SendHeader('Cache-Control: no-store');
-                echo json_encode([
-                    'visuExtension' => 1,
-                    'name'          => IPS_GetName($this->InstanceID),
-                    'scripts'       => $an ? [$this->HookBase() . '&k=agent.js'] : [],
-                    'info'          => $an ? '' : $this->Translate('"Show notification on every page" is switched off in the tile.'),
-                ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
-                return;
-            case 'agent.js':
-                // Start-Skript des Empfängers ohne Kachel (Browser-Erweiterung); nur mit „Auf jeder Seite".
-                if (!$this->ReadPropertyBoolean('OverlayEverywhere')) {
-                    $this->SendStatus(404);
-                    return;
-                }
-                $base = $this->HookBase();
-                $cfg = [
-                    'owner'     => 'ntf-' . $this->InstanceID,
-                    'seenKey'   => 'ntf.seen.' . $this->InstanceID,
-                    'hook'      => $base,
-                    'overlayJs' => $base . '&k=overlay.js&v=' . $this->OverlayVersion(),
-                    'pollMs'    => min(60, max(1, $this->ReadPropertyInteger('PollInterval'))) * 1000,
-                    'labels'    => $this->Labels(),
-                    'levelIcons' => self::LEVEL_ICONS,
-                ];
-                $this->SendHeader('Content-Type: application/javascript; charset=utf-8');
-                $this->SendHeader('Cache-Control: no-cache');
-                echo str_replace('/*NTF_AGENT*/null',
-                    (string) json_encode($cfg, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE),
-                    (string) @file_get_contents(__DIR__ . '/../libs/agent.js'));
                 return;
             case 'poll':
                 $since =isset($_GET['since']) && is_numeric($_GET['since']) ? (int) $_GET['since'] : 0;
@@ -732,6 +788,7 @@ class NotificationTile extends IPSModuleStrict
         }
         $this->SetValue('Unread', NotifyStore::Unread($list));
         $this->Push();
+        $this->Nudge();
         return $result;
     }
 

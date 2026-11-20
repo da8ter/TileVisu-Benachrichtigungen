@@ -1,9 +1,11 @@
 /* Benachrichtigungs-Kachel: Start des Empfängers ohne geladene Kachel.
  *
- * Der Hook liefert diese Datei als k=agent.js mit eingesetzter Konfiguration. Wer sie im Fenster der
- * Visualisierung lädt (die Browser-Erweiterung „Visu-Erweiterung für Symcon“, die die Adresse über k=ext erfährt), bekommt denselben Empfänger,
- * den sonst die Kachel startet: overlay.js laden, dann agent() aufrufen. Lädt später eine Kachel,
- * ersetzt sie die Konfiguration unter demselben owner (mit Farben und Icons aus der Kachel).
+ * Die Instanz dockt an das Symcon-Modul „Visu-Erweiterung“ an und liefert ihm diese Datei mit
+ * eingesetzter Konfiguration; die Browser-Erweiterung „Visu-Erweiterung für Symcon“ hängt sie ins Fenster
+ * der Visualisierung. Dort entsteht derselbe Empfänger, den sonst die Kachel startet: overlay.js laden,
+ * dann agent() aufrufen. Lädt später eine Kachel, ersetzt sie die Konfiguration unter demselben owner
+ * (mit Farben und Icons aus der Kachel). Nachrichten holt der Empfänger wie die Kachel über den Hook;
+ * über den Kanal der Visu-Erweiterung meldet das Modul nur, dass es etwas Neues gibt.
  */
 (function () {
   'use strict';
@@ -68,6 +70,11 @@
         accent: farbe('--accent-color', '#00cdab')
       }
     }));
+    // Kanal der Visu-Erweiterung: Das Modul meldet eine Änderung, der Empfänger fragt sofort statt im Takt.
+    // Die Laufzeit kommt über die Warteliste; ohne sie bleibt es beim Takt.
+    (w.visuExtReady = w.visuExtReady || []).push(function (ext) {
+      ext.on(C.instance, function () { api.pollNow(C.owner); });
+    });
   }
   var s = d.createElement('script');
   s.src = C.overlayJs;
