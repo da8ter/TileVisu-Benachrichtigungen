@@ -8,7 +8,7 @@ declare(strict_types=1);
  * Die Konsole meldet eine fehlende übergeordnete Instanz nur, wenn GetCompatibleParents „moduleIDs“ liefert; mit
  * „modules“ bietet „Gateway ändern“ die Visu-Erweiterung trotzdem an. Beim Anlegen fragt die Konsole sofort nach und
  * öffnet ohne „type“ keinen Dialog (Abbrechen dort löscht die neue Instanz): deshalb in den ersten Sekunden nach der
- * Anlage '{}'. Zusätzlich Andocken und Lösen per Knopf im Formular (DockFormItems → RequestAction 'VisuDock').
+ * Anlage '{}'. Das Formular zeigt den Stand und einen Knopf zur Anleitung (DockFormItems).
  * Braucht self::VISU_EXTENSION, Docked() und RegisterDockAttributes() in Create().
  */
 trait VisuDockTrait
@@ -33,40 +33,15 @@ trait VisuDockTrait
         }
     }
 
-    /** Hinweis und Knopf fürs Andocken an die (einzige) Instanz „Visu-Erweiterung“. */
+    /** Hinweis zum Andocken (über „Gateway ändern“) und ein Knopf zur Anleitung der Visu-Erweiterung. */
     protected function DockFormItems(string $Docked, string $Undocked): array
     {
-        if ($this->Docked()) {
-            return [
-                ['type' => 'Label', 'caption' => $this->Translate($Docked)],
-                ['type' => 'Button', 'caption' => $this->Translate('Undock from the Visu Extension'), 'onClick' => 'IPS_RequestAction($id, \'VisuDock\', false);'],
-            ];
+        $items = [['type' => 'Label', 'caption' => $this->Translate($this->Docked() ? $Docked : $Undocked)]];
+        if (!$this->Docked() && $this->VisuExtensionID() === 0) {
+            $items[] = ['type' => 'Label', 'caption' => $this->Translate('The module "Visu Extension" is optional and not installed.')];
         }
-        if ($this->VisuExtensionID() === 0) {
-            return [
-                ['type' => 'Label', 'caption' => $this->Translate($Undocked)],
-                ['type' => 'Label', 'caption' => $this->Translate('The module "Visu Extension" is optional and not installed.')],
-            ];
-        }
-        return [
-            ['type' => 'Label', 'caption' => $this->Translate($Undocked)],
-            ['type' => 'Button', 'caption' => $this->Translate('Dock onto the Visu Extension'), 'onClick' => 'IPS_RequestAction($id, \'VisuDock\', true);'],
-        ];
-    }
-
-    /** Andocken oder lösen, auf Knopfdruck im Formular. */
-    protected function VisuDock(bool $Dock): void
-    {
-        if ($Dock) {
-            $extension = $this->VisuExtensionID();
-            if ($extension === 0) {
-                throw new \RuntimeException($this->Translate('The module "Visu Extension" is optional and not installed.'));
-            }
-            IPS_ConnectInstance($this->InstanceID, $extension);
-        } elseif ($this->Docked()) {
-            IPS_DisconnectInstance($this->InstanceID);
-        }
-        $this->ReloadForm();
+        $items[] = ['type' => 'Button', 'caption' => $this->Translate('Visu Extension guide'), 'onClick' => "echo 'https://github.com/da8ter/VisuExtensionForSymcon#readme';"];
+        return $items;
     }
 
     /** Die aktive Instanz „Visu-Erweiterung“ (je Server eine: die mit der kleinsten Kennung), sonst 0. */

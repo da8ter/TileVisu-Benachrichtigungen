@@ -101,9 +101,8 @@
             "Level colors": "Farben der Stufen",
             "Level (option level)": "Stufe (Option level)",
             "Browser extension: this tile is docked onto the Visu Extension. Browsers paired there show notifications on every page without a loaded tile. Requires \"Show notification on every page\".": "Browser-Erweiterung: Diese Kachel ist an die Visu-Erweiterung angedockt. Dort gekoppelte Browser zeigen Benachrichtigungen auf jeder Seite, ohne dass die Kachel geladen sein muss. Benötigt „Benachrichtigung auf jeder Seite zeigen“.",
-            "Browser extension (optional): shows notifications on every page without a loaded tile. To use it, dock this tile onto the Visu Extension and pair your browser there. Requires \"Show notification on every page\".": "Browser-Erweiterung (freiwillig): zeigt Benachrichtigungen auf jeder Seite, ohne dass die Kachel geladen sein muss. Dazu diese Kachel an die Visu-Erweiterung andocken und dort den Browser koppeln. Benötigt „Benachrichtigung auf jeder Seite zeigen“.",
-            "Dock onto the Visu Extension": "An die Visu-Erweiterung andocken",
-            "Undock from the Visu Extension": "Von der Visu-Erweiterung lösen",
+            "Browser extension (optional): shows notifications on every page without a loaded tile. To use it, dock this tile onto the Visu Extension (change gateway) and pair your browser there. Requires \"Show notification on every page\".": "Browser-Erweiterung (freiwillig): zeigt Benachrichtigungen auf jeder Seite, ohne dass die Kachel geladen sein muss. Dazu diese Kachel über „Gateway ändern“ an die Visu-Erweiterung andocken und dort den Browser koppeln. Benötigt „Benachrichtigung auf jeder Seite zeigen“.",
+            "Visu Extension guide": "Anleitung zur Visu-Erweiterung",
             "The module \"Visu Extension\" is optional and not installed.": "Das Modul „Visu-Erweiterung“ ist freiwillig und nicht installiert.",
             "\"Show notification on every page\" is switched off in the tile.": "„Benachrichtigung auf jeder Seite zeigen“ ist in der Kachel ausgeschaltet."
         }

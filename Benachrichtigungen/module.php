@@ -311,7 +311,7 @@ class NotificationTile extends IPSModuleStrict
         // Browser-Erweiterung: läuft über die Instanz „Visu-Erweiterung“, an die diese Kachel andockt.
         $form['actions'] = array_merge($form['actions'], $this->DockFormItems(
             'Browser extension: this tile is docked onto the Visu Extension. Browsers paired there show notifications on every page without a loaded tile. Requires "Show notification on every page".',
-            'Browser extension (optional): shows notifications on every page without a loaded tile. To use it, dock this tile onto the Visu Extension and pair your browser there. Requires "Show notification on every page".'));
+            'Browser extension (optional): shows notifications on every page without a loaded tile. To use it, dock this tile onto the Visu Extension (change gateway) and pair your browser there. Requires "Show notification on every page".'));
         return (string) json_encode($form);
     }
 
@@ -348,9 +348,6 @@ class NotificationTile extends IPSModuleStrict
     public function RequestAction(string $Ident, mixed $Value): void
     {
         switch ($Ident) {
-            case 'VisuDock':
-                $this->VisuDock((bool) $Value);
-                return;
             case 'GetState':
                 $this->Push($Value);
                 return;
@@ -394,7 +391,7 @@ class NotificationTile extends IPSModuleStrict
 
     // ── Andocken an die Visu-Erweiterung ────────────────────────────────────────
 
-    // Freiwillig: GetCompatibleParents, Knopf und Andocken stehen in libs/VisuDock.php.
+    // Freiwillig: GetCompatibleParents und der Formular-Hinweis stehen in libs/VisuDock.php.
 
     /**
      * Anfragen der Visu-Erweiterung; die Rückgabe ist die Antwort.
