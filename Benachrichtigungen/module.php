@@ -62,6 +62,7 @@ class NotificationTile extends IPSModuleStrict
         $this->RegisterAttributeString('Messages', '[]');
         $this->RegisterAttributeInteger('Seq', 0);
         $this->RegisterAttributeString('HookToken', '');
+        $this->RegisterDockAttributes();
 
         $this->RegisterVariableInteger('Unread', $this->Translate('Unread'), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
