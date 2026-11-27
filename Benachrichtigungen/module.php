@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../libs/NotifyStore.php';
 require_once __DIR__ . '/../libs/VisuSync.php';
+require_once __DIR__ . '/../libs/VisuDock.php';
 
 /**
  * Benachrichtigungs-Kachel: Skripte und Module schicken Nachrichten (NTF_Send), die Kachel zeigt sie
@@ -18,6 +19,8 @@ require_once __DIR__ . '/../libs/VisuSync.php';
  */
 class NotificationTile extends IPSModuleStrict
 {
+    use VisuDockTrait;
+
     private const HOOK = 'notify';
     private const LEVEL_ICONS = ['info' => 'circle-info', 'success' => 'circle-check', 'warning' => 'triangle-exclamation', 'alarm' => 'siren-on'];
     /** Werksfarben der Stufen (wie in overlay.js und module.html), änderbar in der Tabelle „Farben der Stufen". */
@@ -305,9 +308,9 @@ class NotificationTile extends IPSModuleStrict
             return $el;
         }, $form['actions']);
         // Browser-Erweiterung: läuft über die Instanz „Visu-Erweiterung“, an die diese Kachel andockt.
-        $form['actions'][] = ['type' => 'Label', 'caption' => $this->Docked()
-            ? 'Browser extension: this tile is docked onto the Visu Extension. Browsers paired there show notifications on every page without a loaded tile. Requires "Show notification on every page".'
-            : 'Browser extension: shows notifications on every page without a loaded tile. To use it, connect this tile to an instance "Visu Extension" (change gateway) and pair your browser there. Requires "Show notification on every page".'];
+        $form['actions'] = array_merge($form['actions'], $this->DockFormItems(
+            'Browser extension: this tile is docked onto the Visu Extension. Browsers paired there show notifications on every page without a loaded tile. Requires "Show notification on every page".',
+            'Browser extension (optional): shows notifications on every page without a loaded tile. To use it, dock this tile onto the Visu Extension and pair your browser there. Requires "Show notification on every page".'));
         return (string) json_encode($form);
     }
 
@@ -344,6 +347,9 @@ class NotificationTile extends IPSModuleStrict
     public function RequestAction(string $Ident, mixed $Value): void
     {
         switch ($Ident) {
+            case 'VisuDock':
+                $this->VisuDock((bool) $Value);
+                return;
             case 'GetState':
                 $this->Push($Value);
                 return;
@@ -387,11 +393,7 @@ class NotificationTile extends IPSModuleStrict
 
     // ── Andocken an die Visu-Erweiterung ────────────────────────────────────────
 
-    /** An eine vorhandene Instanz „Visu-Erweiterung“ anschließen; die Kachel arbeitet auch ohne sie. */
-    public function GetCompatibleParents(): string
-    {
-        return (string) json_encode(['type' => 'connect', 'moduleIDs' => [self::VISU_EXTENSION]]);
-    }
+    // Freiwillig: GetCompatibleParents, Knopf und Andocken stehen in libs/VisuDock.php.
 
     /**
      * Anfragen der Visu-Erweiterung; die Rückgabe ist die Antwort.

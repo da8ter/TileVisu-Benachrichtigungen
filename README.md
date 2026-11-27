@@ -147,7 +147,7 @@ Mit der [Visu-Erweiterung für Symcon](https://github.com/da8ter/VisuExtensionFo
 
 1. In der Kachel „Benachrichtigung auf jeder Seite zeigen“ einschalten.
 2. Die Visu-Erweiterung nach ihrer Anleitung installieren: das Symcon-Modul mit einer Instanz „Visu-Erweiterung“ und die Erweiterung im Browser. Den Browser dort einmal koppeln.
-3. Im Formular der Kachel über „Gateway ändern“ die Instanz „Visu-Erweiterung“ wählen. Die Kachel erscheint dann im Formular der Visu-Erweiterung unter „Angedockte Module“.
+3. Im Formular der Kachel unten auf „An die Visu-Erweiterung andocken“ klicken. Die Kachel erscheint dann im Formular der Visu-Erweiterung unter „Angedockte Module“.
 4. Die Visualisierung neu laden.
 
 Eine eigene Adresse für die Kachel trägst du in der Erweiterung nicht ein: Der Browser ist mit der Visu-Erweiterung verbunden, die Kachel dockt in Symcon an sie an. Ohne Visu-Erweiterung arbeitet die Kachel wie bisher.
